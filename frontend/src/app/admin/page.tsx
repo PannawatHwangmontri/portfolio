@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { getStoredAdmin, logoutAdmin, AdminUser } from '@/services/authService';
 import { getProjects, createProject, deleteProject, Project } from '@/services/projectService';
@@ -9,7 +9,6 @@ import { getCertificates, deleteCertificate, Certificate } from '@/services/cert
 import { getArticles, deleteArticle, Article } from '@/services/articleService';
 import { getContactMessages, deleteContactMessage, ContactMessage } from '@/services/contactService';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import {
   Briefcase,
@@ -27,9 +26,37 @@ import Link from 'next/link';
 
 type Tab = 'projects' | 'experience' | 'certificates' | 'articles' | 'messages';
 
+const subscribeStorage = (callback: () => void) => {
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+};
+
+function useAdminUser(): AdminUser | null {
+  const raw = useSyncExternalStore(
+    subscribeStorage,
+    () => {
+      try {
+        return localStorage.getItem('admin_user');
+      } catch {
+        return null;
+      }
+    },
+    () => null
+  );
+
+  return useMemo(() => {
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }, [raw]);
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [user] = useState<AdminUser | null>(() => getStoredAdmin());
+  const user = useAdminUser();
   const [activeTab, setActiveTab] = useState<Tab>('projects');
   const [statusMsg, setStatusMsg] = useState('');
 
@@ -182,33 +209,39 @@ export default function AdminDashboardPage() {
     }
   };
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-xs font-mono text-muted">Loading admin center...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-background">
       {/* Top Admin Header */}
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
+      <header className="bg-surface border-b border-border-subtle sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-1.5 rounded-lg bg-sky-600 text-white font-bold text-xs">
+            <div className="p-1.5 rounded-lg bg-accent text-accent-contrast font-bold text-xs">
               CMS
             </div>
             <div>
-              <h1 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">
+              <h1 className="text-sm font-bold text-foreground leading-tight">
                 Portfolio Admin Center
               </h1>
-              <p className="text-xs text-slate-400 font-mono">{user.email}</p>
+              <p className="text-xs text-muted font-mono">{user.email}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <Link href="/" target="_blank">
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs focus-visible:ring-2 focus-visible:ring-accent">
                 <span>View Live Site</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </Button>
             </Link>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-xs text-rose-600 hover:text-rose-700">
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-xs text-rose-600 hover:text-rose-700 focus-visible:ring-2 focus-visible:ring-accent">
               <LogOut className="w-3.5 h-3.5" />
               <span>Sign Out</span>
             </Button>
@@ -228,75 +261,75 @@ export default function AdminDashboardPage() {
 
         {/* Overview Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-          <Card className="p-4">
+          <div className="p-4 rounded-xl border border-border-subtle bg-surface">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600">
+              <div className="p-2.5 rounded-lg bg-accent-subtle text-accent">
                 <FolderGit2 className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs text-slate-500">ผลงานทั้งหมด</p>
-                <p className="text-xl font-bold text-slate-900 dark:text-white">{projects.length}</p>
+                <p className="text-xs text-muted">ผลงานทั้งหมด</p>
+                <p className="text-xl font-bold text-foreground">{projects.length}</p>
               </div>
             </div>
-          </Card>
+          </div>
 
-          <Card className="p-4">
+          <div className="p-4 rounded-xl border border-border-subtle bg-surface">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600">
                 <Briefcase className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs text-slate-500">ประวัติ/การศึกษา</p>
-                <p className="text-xl font-bold text-slate-900 dark:text-white">{experiences.length}</p>
+                <p className="text-xs text-muted">ประวัติ/การศึกษา</p>
+                <p className="text-xl font-bold text-foreground">{experiences.length}</p>
               </div>
             </div>
-          </Card>
+          </div>
 
-          <Card className="p-4">
+          <div className="p-4 rounded-xl border border-border-subtle bg-surface">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600">
                 <Award className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs text-slate-500">ใบรับรอง</p>
-                <p className="text-xl font-bold text-slate-900 dark:text-white">{certificates.length}</p>
+                <p className="text-xs text-muted">ใบรับรอง</p>
+                <p className="text-xl font-bold text-foreground">{certificates.length}</p>
               </div>
             </div>
-          </Card>
+          </div>
 
-          <Card className="p-4">
+          <div className="p-4 rounded-xl border border-border-subtle bg-surface">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600">
                 <FileText className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs text-slate-500">บทความ</p>
-                <p className="text-xl font-bold text-slate-900 dark:text-white">{articles.length}</p>
+                <p className="text-xs text-muted">บทความ</p>
+                <p className="text-xl font-bold text-foreground">{articles.length}</p>
               </div>
             </div>
-          </Card>
+          </div>
 
-          <Card className="p-4">
+          <div className="p-4 rounded-xl border border-border-subtle bg-surface">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600">
                 <Mail className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs text-slate-500">ข้อความติดต่อ</p>
-                <p className="text-xl font-bold text-slate-900 dark:text-white">{messages.length}</p>
+                <p className="text-xs text-muted">ข้อความติดต่อ</p>
+                <p className="text-xl font-bold text-foreground">{messages.length}</p>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 mb-6 overflow-x-auto pb-1">
+        <div className="flex items-center gap-2 border-b border-border-subtle mb-6 overflow-x-auto pb-1">
           <button
             onClick={() => setActiveTab('projects')}
-            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               activeTab === 'projects'
-                ? 'bg-white dark:bg-slate-900 border-t-2 border-t-sky-600 text-sky-600 font-bold border-x border-slate-200 dark:border-slate-800'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-surface border-t-2 border-t-accent text-accent font-bold border-x border-border-subtle'
+                : 'text-muted hover:text-foreground'
             }`}
           >
             <FolderGit2 className="w-4 h-4" />
@@ -305,10 +338,10 @@ export default function AdminDashboardPage() {
 
           <button
             onClick={() => setActiveTab('experience')}
-            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               activeTab === 'experience'
-                ? 'bg-white dark:bg-slate-900 border-t-2 border-t-sky-600 text-sky-600 font-bold border-x border-slate-200 dark:border-slate-800'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-surface border-t-2 border-t-accent text-accent font-bold border-x border-border-subtle'
+                : 'text-muted hover:text-foreground'
             }`}
           >
             <Briefcase className="w-4 h-4" />
@@ -317,10 +350,10 @@ export default function AdminDashboardPage() {
 
           <button
             onClick={() => setActiveTab('certificates')}
-            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               activeTab === 'certificates'
-                ? 'bg-white dark:bg-slate-900 border-t-2 border-t-sky-600 text-sky-600 font-bold border-x border-slate-200 dark:border-slate-800'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-surface border-t-2 border-t-accent text-accent font-bold border-x border-border-subtle'
+                : 'text-muted hover:text-foreground'
             }`}
           >
             <Award className="w-4 h-4" />
@@ -329,10 +362,10 @@ export default function AdminDashboardPage() {
 
           <button
             onClick={() => setActiveTab('articles')}
-            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               activeTab === 'articles'
-                ? 'bg-white dark:bg-slate-900 border-t-2 border-t-sky-600 text-sky-600 font-bold border-x border-slate-200 dark:border-slate-800'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-surface border-t-2 border-t-accent text-accent font-bold border-x border-border-subtle'
+                : 'text-muted hover:text-foreground'
             }`}
           >
             <FileText className="w-4 h-4" />
@@ -341,10 +374,10 @@ export default function AdminDashboardPage() {
 
           <button
             onClick={() => setActiveTab('messages')}
-            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               activeTab === 'messages'
-                ? 'bg-white dark:bg-slate-900 border-t-2 border-t-sky-600 text-sky-600 font-bold border-x border-slate-200 dark:border-slate-800'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-surface border-t-2 border-t-accent text-accent font-bold border-x border-border-subtle'
+                : 'text-muted hover:text-foreground'
             }`}
           >
             <Mail className="w-4 h-4" />
@@ -356,16 +389,16 @@ export default function AdminDashboardPage() {
         {activeTab === 'projects' && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">รายการผลงาน (Projects)</h2>
-              <Button size="sm" variant="primary" onClick={() => setShowProjectModal(true)} className="gap-1.5 text-xs">
+              <h2 className="text-base font-bold text-foreground">รายการผลงาน (Projects)</h2>
+              <Button size="sm" variant="primary" onClick={() => setShowProjectModal(true)} className="gap-1.5 text-xs focus-visible:ring-2 focus-visible:ring-accent">
                 <Plus className="w-4 h-4" />
                 <span>เพิ่มผลงานใหม่</span>
               </Button>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-              <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-                <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+            <div className="bg-surface rounded-xl border border-border-subtle overflow-hidden">
+              <table className="w-full text-left text-xs text-muted">
+                <thead className="bg-surface-subtle text-muted font-semibold border-b border-border-subtle">
                   <tr>
                     <th className="p-3.5">ชื่อโปรเจกต์ (TH / EN)</th>
                     <th className="p-3.5">หมวดหมู่</th>
@@ -374,12 +407,12 @@ export default function AdminDashboardPage() {
                     <th className="p-3.5 text-right">จัดการ</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className="divide-y divide-border-subtle">
                   {projects.map((p) => (
-                    <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                    <tr key={p.id} className="hover:bg-surface-subtle/50 transition-colors">
                       <td className="p-3.5">
-                        <div className="font-bold text-slate-900 dark:text-white">{p.title.th}</div>
-                        <div className="text-slate-400 text-xs">{p.title.en}</div>
+                        <div className="font-bold text-foreground">{p.title.th}</div>
+                        <div className="text-muted text-xs">{p.title.en}</div>
                       </td>
                       <td className="p-3.5">
                         <Badge variant="neutral">{p.category}</Badge>
@@ -387,7 +420,7 @@ export default function AdminDashboardPage() {
                       <td className="p-3.5">
                         <div className="flex flex-wrap gap-1">
                           {p.tags.map((t) => (
-                            <span key={t} className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px]">
+                            <span key={t} className="px-1.5 py-0.5 rounded bg-surface-subtle text-muted border border-border-subtle text-[10px]">
                               {t}
                             </span>
                           ))}
@@ -395,14 +428,14 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="p-3.5">
                         <div className="flex items-center gap-2">
-                          {p.demoUrl && <a href={p.demoUrl} target="_blank" className="text-sky-600 hover:underline">Demo</a>}
-                          {p.repoUrl && <a href={p.repoUrl} target="_blank" className="text-slate-500 hover:underline">Repo</a>}
+                          {p.demoUrl && <a href={p.demoUrl} target="_blank" className="text-accent hover:underline">Demo</a>}
+                          {p.repoUrl && <a href={p.repoUrl} target="_blank" className="text-muted hover:underline">Repo</a>}
                         </div>
                       </td>
                       <td className="p-3.5 text-right">
                         <button
                           onClick={() => handleDeleteProject(p.id)}
-                          className="p-1.5 rounded text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                          className="p-1.5 rounded text-rose-500 hover:bg-rose-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-accent"
                           title="ลบ"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -420,26 +453,26 @@ export default function AdminDashboardPage() {
         {activeTab === 'experience' && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">ประวัติทำงานและการศึกษา</h2>
+              <h2 className="text-base font-bold text-foreground">ประวัติทำงานและการศึกษา</h2>
             </div>
             <div className="space-y-3">
               {experiences.map((e) => (
-                <Card key={e.id} className="p-4 flex items-center justify-between">
+                <div key={e.id} className="p-4 rounded-xl border border-border-subtle bg-surface flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
                       <Badge variant="neutral">{e.type === 'work' ? 'การทำงาน' : 'การศึกษา'}</Badge>
-                      <span className="font-bold text-slate-900 dark:text-white">{e.title.th}</span>
-                      <span className="text-slate-400 text-xs">({e.organization.th})</span>
+                      <span className="font-bold text-foreground">{e.title.th}</span>
+                      <span className="text-muted text-xs">({e.organization.th})</span>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">{e.period} • {e.description.th}</p>
+                    <p className="text-xs text-muted mt-1">{e.period} • {e.description.th}</p>
                   </div>
                   <button
                     onClick={() => handleDeleteExperience(e.id)}
-                    className="p-1.5 rounded text-rose-500 hover:bg-rose-50 transition-colors"
+                    className="p-1.5 rounded text-rose-500 hover:bg-rose-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                </Card>
+                </div>
               ))}
             </div>
           </div>
@@ -449,22 +482,22 @@ export default function AdminDashboardPage() {
         {activeTab === 'certificates' && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">เกียรติบัตรและใบรับรอง</h2>
+              <h2 className="text-base font-bold text-foreground">เกียรติบัตรและใบรับรอง</h2>
             </div>
             <div className="space-y-3">
               {certificates.map((c) => (
-                <Card key={c.id} className="p-4 flex items-center justify-between">
+                <div key={c.id} className="p-4 rounded-xl border border-border-subtle bg-surface flex items-center justify-between">
                   <div>
-                    <span className="font-bold text-slate-900 dark:text-white">{c.title.th}</span>
-                    <p className="text-xs text-slate-500 mt-1">{c.issuer} • {c.issueDate}</p>
+                    <span className="font-bold text-foreground">{c.title.th}</span>
+                    <p className="text-xs text-muted mt-1">{c.issuer} • {c.issueDate}</p>
                   </div>
                   <button
                     onClick={() => handleDeleteCertificate(c.id)}
-                    className="p-1.5 rounded text-rose-500 hover:bg-rose-50 transition-colors"
+                    className="p-1.5 rounded text-rose-500 hover:bg-rose-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                </Card>
+                </div>
               ))}
             </div>
           </div>
@@ -474,22 +507,22 @@ export default function AdminDashboardPage() {
         {activeTab === 'articles' && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">บทความและบันทึกความรู้</h2>
+              <h2 className="text-base font-bold text-foreground">บทความและบันทึกความรู้</h2>
             </div>
             <div className="space-y-3">
               {articles.map((a) => (
-                <Card key={a.id} className="p-4 flex items-center justify-between">
+                <div key={a.id} className="p-4 rounded-xl border border-border-subtle bg-surface flex items-center justify-between">
                   <div>
-                    <span className="font-bold text-slate-900 dark:text-white">{a.title.th}</span>
-                    <p className="text-xs text-slate-500 mt-1">{a.category} • {a.readTime} • {a.publishedAt}</p>
+                    <span className="font-bold text-foreground">{a.title.th}</span>
+                    <p className="text-xs text-muted mt-1">{a.category} • {a.readTime} • {a.publishedAt}</p>
                   </div>
                   <button
                     onClick={() => handleDeleteArticle(a.id)}
-                    className="p-1.5 rounded text-rose-500 hover:bg-rose-50 transition-colors"
+                    className="p-1.5 rounded text-rose-500 hover:bg-rose-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                </Card>
+                </div>
               ))}
             </div>
           </div>
@@ -499,26 +532,26 @@ export default function AdminDashboardPage() {
         {activeTab === 'messages' && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">กล่องข้อความติดต่อ ({messages.length})</h2>
+              <h2 className="text-base font-bold text-foreground">กล่องข้อความติดต่อ ({messages.length})</h2>
             </div>
 
             {messages.length === 0 ? (
-              <Card className="p-8 text-center text-slate-400 text-xs">
+              <div className="p-8 rounded-xl border border-border-subtle bg-surface text-center text-muted text-xs">
                 ยังไม่มีข้อความติดต่อเข้ามา
-              </Card>
+              </div>
             ) : (
               <div className="space-y-3">
                 {messages.map((m) => (
-                  <Card key={m.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div key={m.id} className="p-4 rounded-xl border border-border-subtle bg-surface flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-900 dark:text-white">{m.name}</span>
-                        <a href={`mailto:${m.email}`} className="text-sky-600 hover:underline text-xs">
+                        <span className="font-bold text-foreground">{m.name}</span>
+                        <a href={`mailto:${m.email}`} className="text-accent hover:underline text-xs">
                           {m.email}
                         </a>
-                        <span className="text-slate-400 text-xs font-mono">{new Date(m.createdAt).toLocaleDateString()}</span>
+                        <span className="text-muted text-xs font-mono">{new Date(m.createdAt).toLocaleDateString()}</span>
                       </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
+                      <p className="text-xs text-foreground mt-2 bg-surface-subtle p-2.5 rounded-lg border border-border-subtle">
                         &ldquo;{m.message}&rdquo;
                       </p>
                     </div>
@@ -526,13 +559,13 @@ export default function AdminDashboardPage() {
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => handleDeleteMessage(m.id)}
-                        className="p-2 rounded text-rose-500 hover:bg-rose-50 transition-colors"
+                        className="p-2 rounded text-rose-500 hover:bg-rose-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-accent"
                         title="ลบข้อความ"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-                  </Card>
+                  </div>
                 ))}
               </div>
             )}
@@ -542,60 +575,60 @@ export default function AdminDashboardPage() {
         {/* Project Create Modal */}
         {showProjectModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-            <Card className="w-full max-w-lg p-6 bg-white dark:bg-slate-900">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">
+            <div className="w-full max-w-lg p-6 bg-surface border border-border-subtle rounded-xl shadow-xl">
+              <h3 className="text-base font-bold text-foreground mb-4">
                 เพิ่มผลงานใหม่ (Add Project)
               </h3>
               <form onSubmit={handleCreateProject} className="space-y-3 text-xs">
                 <div>
-                  <label className="font-semibold block mb-1">ชื่อโปรเจกต์ (ไทย)</label>
+                  <label className="font-semibold block mb-1 text-foreground">ชื่อโปรเจกต์ (ไทย)</label>
                   <input
                     type="text"
                     required
                     value={newProject.thTitle}
                     onChange={(e) => setNewProject({ ...newProject, thTitle: e.target.value })}
-                    className="w-full p-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
+                    className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                     placeholder="เช่น ระบบ Task Management"
                   />
                 </div>
                 <div>
-                  <label className="font-semibold block mb-1">ชื่อโปรเจกต์ (อังกฤษ)</label>
+                  <label className="font-semibold block mb-1 text-foreground">ชื่อโปรเจกต์ (อังกฤษ)</label>
                   <input
                     type="text"
                     required
                     value={newProject.enTitle}
                     onChange={(e) => setNewProject({ ...newProject, enTitle: e.target.value })}
-                    className="w-full p-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
+                    className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                     placeholder="e.g. Task Management API"
                   />
                 </div>
                 <div>
-                  <label className="font-semibold block mb-1">คำอธิบาย (ไทย)</label>
+                  <label className="font-semibold block mb-1 text-foreground">คำอธิบาย (ไทย)</label>
                   <textarea
                     rows={2}
                     required
                     value={newProject.thDesc}
                     onChange={(e) => setNewProject({ ...newProject, thDesc: e.target.value })}
-                    className="w-full p-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
+                    className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                   />
                 </div>
                 <div>
-                  <label className="font-semibold block mb-1">คำอธิบาย (อังกฤษ)</label>
+                  <label className="font-semibold block mb-1 text-foreground">คำอธิบาย (อังกฤษ)</label>
                   <textarea
                     rows={2}
                     required
                     value={newProject.enDesc}
                     onChange={(e) => setNewProject({ ...newProject, enDesc: e.target.value })}
-                    className="w-full p-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
+                    className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="font-semibold block mb-1">หมวดหมู่</label>
+                    <label className="font-semibold block mb-1 text-foreground">หมวดหมู่</label>
                     <select
                       value={newProject.category}
                       onChange={(e) => setNewProject({ ...newProject, category: e.target.value as 'web' | 'mobile' | 'backend' })}
-                      className="w-full p-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
+                      className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                     >
                       <option value="web">Web Apps</option>
                       <option value="mobile">Mobile</option>
@@ -603,49 +636,49 @@ export default function AdminDashboardPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="font-semibold block mb-1">Tags (คั่นด้วยจุลภาค)</label>
+                    <label className="font-semibold block mb-1 text-foreground">Tags (คั่นด้วยจุลภาค)</label>
                     <input
                       type="text"
                       value={newProject.tags}
                       onChange={(e) => setNewProject({ ...newProject, tags: e.target.value })}
-                      className="w-full p-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
+                      className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                       placeholder="React, NestJS, Supabase"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="font-semibold block mb-1">Demo URL</label>
+                    <label className="font-semibold block mb-1 text-foreground">Demo URL</label>
                     <input
                       type="url"
                       value={newProject.demoUrl}
                       onChange={(e) => setNewProject({ ...newProject, demoUrl: e.target.value })}
-                      className="w-full p-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
+                      className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                       placeholder="https://..."
                     />
                   </div>
                   <div>
-                    <label className="font-semibold block mb-1">Source Code URL</label>
+                    <label className="font-semibold block mb-1 text-foreground">Source Code URL</label>
                     <input
                       type="url"
                       value={newProject.repoUrl}
                       onChange={(e) => setNewProject({ ...newProject, repoUrl: e.target.value })}
-                      className="w-full p-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
+                      className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                       placeholder="https://github.com/..."
                     />
                   </div>
                 </div>
 
                 <div className="flex items-center justify-end gap-2 pt-3">
-                  <Button variant="ghost" size="sm" type="button" onClick={() => setShowProjectModal(false)}>
+                  <Button variant="ghost" size="sm" type="button" onClick={() => setShowProjectModal(false)} className="focus-visible:ring-2 focus-visible:ring-accent">
                     ยกเลิก
                   </Button>
-                  <Button variant="primary" size="sm" type="submit">
+                  <Button variant="primary" size="sm" type="submit" className="focus-visible:ring-2 focus-visible:ring-accent">
                     บันทึกผลงาน
                   </Button>
                 </div>
               </form>
-            </Card>
+            </div>
           </div>
         )}
       </main>

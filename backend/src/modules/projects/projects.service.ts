@@ -2,14 +2,92 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service.js';
 import { initialProjects, Project } from './projects.data.js';
 
+interface GitHubRawRepo {
+  id: number;
+  name: string;
+  description: string | null;
+  fork: boolean;
+  language: string | null;
+  html_url: string;
+  homepage: string | null;
+  topics?: string[];
+  updated_at: string;
+}
+
 @Injectable()
 export class ProjectsService {
   private readonly logger = new Logger(ProjectsService.name);
   private memoryProjects: Project[] = [...initialProjects];
+  private githubCache: { timestamp: number; data: Project[] } | null = null;
+  private readonly CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes cache
 
   constructor(private readonly supabaseService: SupabaseService) {}
 
+  async fetchGithubRepos(): Promise<Project[]> {
+    if (this.githubCache && Date.now() - this.githubCache.timestamp < this.CACHE_TTL_MS) {
+      return this.githubCache.data;
+    }
+
+    try {
+      const response = await fetch(
+        'https://api.github.com/users/PannawatHwangmontri/repos?sort=updated&per_page=30',
+        {
+          headers: {
+            'User-Agent': 'Portfolio-App',
+            Accept: 'application/vnd.github.v3+json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        this.logger.warn(`GitHub API responded with status ${response.status}`);
+        return this.githubCache?.data || [];
+      }
+
+      const repos = (await response.json()) as GitHubRawRepo[];
+      if (!Array.isArray(repos)) {
+        return this.githubCache?.data || [];
+      }
+
+      const filtered = repos
+        .filter((repo) => !repo.fork)
+        .slice(0, 6)
+        .map((repo, idx): Project => ({
+          id: `gh-${repo.id}`,
+          title: {
+            th: repo.name,
+            en: repo.name,
+          },
+          description: {
+            th: repo.description || `โอเพนซอร์สโปรเจกต์ ${repo.name} บน GitHub`,
+            en: repo.description || `Public open-source repository ${repo.name} on GitHub`,
+          },
+          category: 'github',
+          tags: [repo.language, 'GitHub', 'Open Source'].filter(Boolean) as string[],
+          demoUrl: repo.homepage || '',
+          repoUrl: repo.html_url,
+          featured: false,
+          order: idx + 1,
+          createdAt: repo.updated_at,
+        }));
+
+      this.githubCache = {
+        timestamp: Date.now(),
+        data: filtered,
+      };
+
+      return filtered;
+    } catch (err) {
+      this.logger.error('Failed to fetch repos from GitHub API', err);
+      return this.githubCache?.data || [];
+    }
+  }
+
   async findAll(category?: string): Promise<Project[]> {
+    if (category === 'github') {
+      return this.fetchGithubRepos();
+    }
+
     const client = this.supabaseService.getClient();
     if (client) {
       try {

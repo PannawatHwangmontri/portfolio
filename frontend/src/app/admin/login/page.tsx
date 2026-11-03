@@ -31,23 +31,23 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen flex flex-col justify-center items-center px-4 bg-background">
       <div className="w-full max-w-md">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 mb-6 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Portfolio / กลับหน้าหลัก</span>
         </Link>
 
-        <Card className="p-8 border-slate-200 dark:border-slate-800 shadow-sm">
+        <Card className="p-8 border border-border-subtle bg-surface shadow-none">
           <div className="text-center mb-6">
-            <div className="w-12 h-12 rounded-xl bg-sky-50 dark:bg-sky-950/60 border border-sky-100 dark:border-sky-800 text-sky-600 flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 rounded-xl bg-accent-subtle border border-accent/20 text-accent flex items-center justify-center mx-auto mb-3">
               <Lock className="w-6 h-6" />
             </div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Admin Dashboard Login</h1>
-            <p className="text-xs text-slate-500 mt-1">ระบบจัดการข้อมูลพอร์ตโฟลิโอและกล่องข้อความ</p>
+            <h1 className="text-xl font-bold text-foreground">Admin Dashboard Login</h1>
+            <p className="text-xs text-muted mt-1">ระบบจัดการข้อมูลพอร์ตโฟลิโอและกล่องข้อความ</p>
           </div>
 
           {errorMsg && (
@@ -59,34 +59,34 @@ export default function AdminLoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-foreground mb-1">
                 Admin Email
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <Mail className="w-4 h-4 text-muted absolute left-3 top-2.5" />
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-border-subtle bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                   placeholder="admin@pannawat.dev"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-foreground mb-1">
                 Password
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <Lock className="w-4 h-4 text-muted absolute left-3 top-2.5" />
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-border-subtle bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                   placeholder="••••••••"
                 />
               </div>
@@ -103,9 +103,9 @@ export default function AdminLoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-center text-xs text-slate-400">
+          <div className="mt-6 pt-4 border-t border-border-subtle text-center text-xs text-muted">
             <span>Development Account: </span>
-            <span className="font-mono text-slate-600 dark:text-slate-300">admin@pannawat.dev / admin1234</span>
+            <span className="font-mono text-foreground">admin@pannawat.dev / admin1234</span>
           </div>
         </Card>
       </div>

@@ -28,6 +28,7 @@ export function logoutAdmin() {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
+    window.dispatchEvent(new Event('storage'));
   }
 }
 

@@ -28,13 +28,13 @@ export function TestimonialsSection() {
   ];
 
   return (
-    <section id="testimonials" className="py-20 border-b border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#090A0F]">
+    <section id="testimonials" className="py-20 border-b border-border-subtle bg-background">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="max-w-3xl mb-12">
-          <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
             {t('testimonials.title')}
           </h2>
-          <p className="mt-1 text-xs font-mono text-slate-400">
+          <p className="mt-1 text-xs font-mono text-muted">
             {t('testimonials.subtitle')}
           </p>
         </div>
@@ -43,16 +43,16 @@ export function TestimonialsSection() {
           {testimonials.map((item) => (
             <div
               key={item.id}
-              className="p-6 sm:p-7 rounded-lg border-l-2 border-l-slate-400 dark:border-l-slate-600 bg-[#FAFAFA] dark:bg-[#0D0F17]/50 flex flex-col justify-between"
+              className="p-6 sm:p-7 rounded-lg border-l-2 border-l-accent border border-border-subtle bg-surface-subtle flex flex-col justify-between"
             >
-              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-light">
+              <p className="text-sm text-foreground leading-relaxed font-light">
                 &ldquo;{item.quote[locale]}&rdquo;
               </p>
-              <div className="mt-6 pt-4 border-t border-slate-200/60 dark:border-slate-800/60">
-                <p className="text-xs font-semibold text-slate-900 dark:text-white">
+              <div className="mt-6 pt-4 border-t border-border-subtle">
+                <p className="text-xs font-semibold text-foreground">
                   {item.author}
                 </p>
-                <p className="text-[11px] font-mono text-slate-400 mt-0.5">
+                <p className="text-[11px] font-mono text-muted mt-0.5">
                   {item.organization}
                 </p>
               </div>

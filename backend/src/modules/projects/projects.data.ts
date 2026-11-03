@@ -8,7 +8,7 @@ export interface Project {
     th: string;
     en: string;
   };
-  category: 'web' | 'mobile' | 'backend';
+  category: 'web' | 'mobile' | 'backend' | 'github';
   tags: string[];
   demoUrl?: string;
   repoUrl?: string;

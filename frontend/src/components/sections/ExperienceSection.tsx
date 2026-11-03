@@ -16,13 +16,13 @@ export function ExperienceSection() {
   const eduItems = items.filter((item) => item.type === 'education');
 
   return (
-    <section id="experience" className="py-20 border-b border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#090A0F]">
+    <section id="experience" className="py-20 border-b border-border-subtle bg-background">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="max-w-3xl mb-12">
-          <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
             {t('experience.title')}
           </h2>
-          <p className="mt-1 text-xs font-mono text-slate-400">
+          <p className="mt-1 text-xs font-mono text-muted">
             {t('experience.subtitle')}
           </p>
         </div>
@@ -30,25 +30,25 @@ export function ExperienceSection() {
         <div className="space-y-16">
           {/* Work Experience Ledger */}
           <div>
-            <h3 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-6">
+            <h3 className="text-xs font-mono text-muted mb-6">
               {t('experience.workTitle')}
             </h3>
 
-            <div className="border-t border-slate-200 dark:border-slate-800 divide-y divide-slate-200 dark:divide-slate-800">
+            <div className="border-t border-border-subtle divide-y divide-border-subtle">
               {workItems.map((item) => (
                 <div key={item.id} className="py-6 grid grid-cols-1 md:grid-cols-12 gap-4">
                   <div className="md:col-span-3">
-                    <span className="text-xs font-mono text-slate-500">{item.period}</span>
-                    <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mt-0.5">
+                    <span className="text-xs font-mono text-muted">{item.period}</span>
+                    <p className="text-xs font-medium text-foreground mt-0.5">
                       {item.organization[locale]}
                     </p>
                   </div>
 
                   <div className="md:col-span-9">
-                    <h4 className="text-base font-semibold text-slate-900 dark:text-white">
+                    <h4 className="text-base font-semibold text-foreground">
                       {item.title[locale]}
                     </h4>
-                    <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-light">
+                    <p className="mt-2 text-sm text-muted leading-relaxed font-light">
                       {item.description[locale]}
                     </p>
                     {item.skills && item.skills.length > 0 && (
@@ -56,7 +56,7 @@ export function ExperienceSection() {
                         {item.skills.map((skill) => (
                           <span
                             key={skill}
-                            className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                            className="text-[11px] font-mono px-2 py-0.5 rounded bg-surface-subtle text-muted border border-border-subtle"
                           >
                             {skill}
                           </span>
@@ -71,25 +71,25 @@ export function ExperienceSection() {
 
           {/* Education Ledger */}
           <div>
-            <h3 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-6">
+            <h3 className="text-xs font-mono text-muted mb-6">
               {t('experience.educationTitle')}
             </h3>
 
-            <div className="border-t border-slate-200 dark:border-slate-800 divide-y divide-slate-200 dark:divide-slate-800">
+            <div className="border-t border-border-subtle divide-y divide-border-subtle">
               {eduItems.map((item) => (
                 <div key={item.id} className="py-6 grid grid-cols-1 md:grid-cols-12 gap-4">
                   <div className="md:col-span-3">
-                    <span className="text-xs font-mono text-slate-500">{item.period}</span>
-                    <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mt-0.5">
+                    <span className="text-xs font-mono text-muted">{item.period}</span>
+                    <p className="text-xs font-medium text-foreground mt-0.5">
                       {item.organization[locale]}
                     </p>
                   </div>
 
                   <div className="md:col-span-9">
-                    <h4 className="text-base font-semibold text-slate-900 dark:text-white">
+                    <h4 className="text-base font-semibold text-foreground">
                       {item.title[locale]}
                     </h4>
-                    <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-light">
+                    <p className="mt-2 text-sm text-muted leading-relaxed font-light">
                       {item.description[locale]}
                     </p>
                   </div>

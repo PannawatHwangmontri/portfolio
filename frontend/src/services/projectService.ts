@@ -10,7 +10,7 @@ export interface Project {
     th: string;
     en: string;
   };
-  category: 'web' | 'mobile' | 'backend';
+  category: 'web' | 'mobile' | 'backend' | 'github';
   tags: string[];
   demoUrl?: string;
   repoUrl?: string;
@@ -78,6 +78,22 @@ export async function getProjects(category?: string): Promise<Project[]> {
     const query = category && category !== 'all' ? `?category=${category}` : '';
     return await fetchApi<Project[]>(`/projects${query}`);
   } catch {
+    if (category === 'github') {
+      return [
+        {
+          id: 'gh-portfolio',
+          title: { th: 'portfolio', en: 'portfolio' },
+          description: {
+            th: 'ระบบ Portfolio Monorepo ด้วย Next.js และ NestJS',
+            en: 'Personal portfolio monorepo with Next.js and NestJS',
+          },
+          category: 'github',
+          tags: ['TypeScript', 'GitHub', 'Open Source'],
+          demoUrl: 'https://portfolio.pannawat.dev',
+          repoUrl: 'https://github.com/PannawatHwangmontri/portfolio',
+        },
+      ];
+    }
     if (category && category !== 'all') {
       return fallbackProjects.filter((p) => p.category === category);
     }

@@ -26,26 +26,26 @@ export function SkillsSection() {
   ];
 
   return (
-    <section id="skills" className="py-20 border-b border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#090A0F]">
+    <section id="skills" className="py-20 border-b border-border-subtle bg-background">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="max-w-3xl mb-12">
-          <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
             {t('skills.title')}
           </h2>
-          <p className="mt-1 text-xs font-mono text-slate-400">
+          <p className="mt-1 text-xs font-mono text-muted">
             {t('skills.subtitle')}
           </p>
         </div>
 
         {/* Technical Matrix Table */}
-        <div className="border border-slate-200 dark:border-slate-800 divide-y divide-slate-200 dark:divide-slate-800 rounded-lg overflow-hidden bg-white dark:bg-[#0D0F17]/40">
+        <div className="border border-border-subtle divide-y divide-border-subtle rounded-lg overflow-hidden bg-surface">
           {skillGroups.map((group) => (
             <div
               key={group.key}
-              className="grid grid-cols-1 md:grid-cols-12 p-5 sm:p-6 hover:bg-slate-50/70 dark:hover:bg-slate-900/40 transition-colors"
+              className="grid grid-cols-1 md:grid-cols-12 p-5 sm:p-6 hover:bg-surface-subtle transition-colors"
             >
               <div className="md:col-span-4 mb-3 md:mb-0">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                <h3 className="text-sm font-semibold text-foreground">
                   {t(`skills.${group.key}`)}
                 </h3>
               </div>
@@ -53,7 +53,7 @@ export function SkillsSection() {
                 {group.skills.map((skill) => (
                   <span
                     key={skill}
-                    className="text-xs font-mono px-2.5 py-1 rounded bg-slate-100/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60"
+                    className="text-xs font-mono px-2.5 py-1 rounded bg-surface-subtle text-foreground border border-border-subtle"
                   >
                     {skill}
                   </span>

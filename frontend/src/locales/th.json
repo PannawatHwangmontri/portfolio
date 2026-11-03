@@ -42,6 +42,7 @@
     "filterWeb": "Web Apps",
     "filterMobile": "Mobile",
     "filterBackend": "Backend / API",
+    "filterGithub": "GitHub Repos",
     "liveDemo": "ดูตัวอย่างสด",
     "sourceCode": "ดูโค้ด"
   },

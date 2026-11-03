@@ -47,18 +47,18 @@ export function ActivitiesSection() {
         en: 'Contributed bug fixes, performance improvements, and documentation to developer tooling open source repos.',
       },
       tags: ['Open Source', 'GitHub', 'TypeScript'],
-      year: '2023 - 2025',
+      year: '2023 / 2025',
     },
   ];
 
   return (
-    <section id="activities" className="py-20 border-b border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#090A0F]">
+    <section id="activities" className="py-20 border-b border-border-subtle bg-background">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="max-w-3xl mb-12">
-          <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
             {t('activities.title')}
           </h2>
-          <p className="mt-1 text-xs font-mono text-slate-400">
+          <p className="mt-1 text-xs font-mono text-muted">
             {t('activities.subtitle')}
           </p>
         </div>
@@ -67,34 +67,34 @@ export function ActivitiesSection() {
           {activities.map((act) => (
             <div
               key={act.id}
-              className="p-6 sm:p-7 rounded-lg bg-white dark:bg-[#090A0F] border border-slate-200/90 dark:border-slate-800/90 flex flex-col justify-between"
+              className="p-6 sm:p-7 rounded-lg bg-surface border border-border-subtle flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between text-xs font-mono mb-3">
-                  <span className="text-sky-600 dark:text-sky-400 font-medium">
+                  <span className="text-accent font-medium">
                     {act.award[locale]}
                   </span>
-                  <span className="text-slate-400">{act.year}</span>
+                  <span className="text-muted">{act.year}</span>
                 </div>
 
-                <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+                <h3 className="text-base font-semibold text-foreground">
                   {act.title[locale]}
                 </h3>
 
-                <p className="text-xs text-slate-500 mt-1">
-                  Role: <span className="text-slate-700 dark:text-slate-300 font-medium">{act.role[locale]}</span>
+                <p className="text-xs text-muted mt-1">
+                  Role: <span className="text-foreground font-medium">{act.role[locale]}</span>
                 </p>
 
-                <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-light">
+                <p className="mt-3 text-sm text-muted leading-relaxed font-light">
                   {act.description[locale]}
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-1.5 mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+              <div className="flex flex-wrap gap-1.5 mt-6 pt-4 border-t border-border-subtle">
                 {act.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                    className="text-[11px] font-mono px-2 py-0.5 rounded bg-surface-subtle text-muted border border-border-subtle"
                   >
                     {tag}
                   </span>
