@@ -1,0 +1,89 @@
+{
+  "nav": {
+    "about": "About",
+    "skills": "Skills",
+    "projects": "Projects",
+    "experience": "Experience",
+    "certificates": "Certificates",
+    "activities": "Activities",
+    "articles": "Articles",
+    "contact": "Contact",
+    "resume": "Download Resume",
+    "admin": "Dashboard"
+  },
+  "hero": {
+    "greeting": "Hello, I'm",
+    "name": "Pannawat Hwangmontri",
+    "role": "Full-Stack Developer & Software Engineer",
+    "description": "Crafting high-performance, resilient web applications with modern architectures and seamless user experiences.",
+    "viewProjects": "View Projects",
+    "contactMe": "Contact Me"
+  },
+  "about": {
+    "title": "About Me",
+    "subtitle": "My journey and passion in software engineering",
+    "bio": "I am a software engineer dedicated to building scalable solutions, writing clean maintainable code, and continuously exploring modern technologies. I focus on both robust backend architectures and highly intuitive frontends.",
+    "statYears": "Years of Coding",
+    "statProjects": "Projects Built",
+    "statHackathons": "Hackathons & Events"
+  },
+  "skills": {
+    "title": "Skills & Expertise",
+    "subtitle": "Technologies and tools I use regularly",
+    "languages": "Languages",
+    "frontend": "Frontend & Animation",
+    "backend": "Backend & Database",
+    "devops": "DevOps & Tools"
+  },
+  "projects": {
+    "title": "Featured Projects",
+    "subtitle": "Selected projects with live demos and source code",
+    "filterAll": "All",
+    "filterWeb": "Web Apps",
+    "filterMobile": "Mobile",
+    "filterBackend": "Backend / API",
+    "liveDemo": "Live Demo",
+    "sourceCode": "Source Code"
+  },
+  "experience": {
+    "title": "Experience & Education",
+    "subtitle": "My academic background and professional journey",
+    "workTitle": "Work Experience",
+    "educationTitle": "Education"
+  },
+  "certificates": {
+    "title": "Certificates & Awards",
+    "subtitle": "Verified credentials and recognized achievements",
+    "viewCredential": "Verify Credential"
+  },
+  "activities": {
+    "title": "Activities & Hackathons",
+    "subtitle": "Competitions, hackathons, and tech community involvement"
+  },
+  "articles": {
+    "title": "Articles & Insights",
+    "subtitle": "Sharing thoughts and guides on modern software engineering",
+    "readMore": "Read Article"
+  },
+  "testimonials": {
+    "title": "Testimonials",
+    "subtitle": "Words from mentors, colleagues, and collaborators"
+  },
+  "contact": {
+    "title": "Get in Touch",
+    "subtitle": "Feel free to reach out for collaborations or inquiries",
+    "nameLabel": "Your Name",
+    "emailLabel": "Email Address",
+    "messageLabel": "Message",
+    "sendButton": "Send Message",
+    "sending": "Sending...",
+    "sentSuccess": "Message sent successfully!",
+    "copyEmail": "Copy Email",
+    "copied": "Copied!",
+    "directEmail": "Direct Email"
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "builtWith": "Built with Next.js, NestJS, Supabase & Tailwind CSS"
+  }
+}
