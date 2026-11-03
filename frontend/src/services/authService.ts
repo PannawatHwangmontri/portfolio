@@ -1,27 +1,23 @@
+import { fetchApi } from './api';
+
 export interface AdminUser {
   id: string;
   email: string;
 }
 
 export async function loginAdmin(email: string, password: string): Promise<{ user: AdminUser; token: string }> {
-  // If Supabase client credentials are configured in Next.js env, we could use createClient
-  // Otherwise, provide seamless authentication for dev/admin
-  if (email === 'admin@pannawat.dev' && password === 'admin1234') {
-    const mockUser: AdminUser = { id: 'admin-1', email };
-    const mockToken = 'dev-admin-token';
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('admin_token', mockToken);
-      localStorage.setItem('admin_user', JSON.stringify(mockUser));
-    }
-    return { user: mockUser, token: mockToken };
+  const res = await fetchApi<{ user: AdminUser; token: string }>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('admin_token', res.token);
+    localStorage.setItem('admin_user', JSON.stringify(res.user));
+    window.dispatchEvent(new Event('storage'));
   }
 
-  // Attempt standard login if configured
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('admin_token', 'dev-admin-token');
-    localStorage.setItem('admin_user', JSON.stringify({ id: 'admin-user', email }));
-  }
-  return { user: { id: 'admin-user', email }, token: 'dev-admin-token' };
+  return res;
 }
 
 export function logoutAdmin() {

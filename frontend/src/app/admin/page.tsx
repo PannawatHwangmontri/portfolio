@@ -3,16 +3,22 @@
 import React, { useEffect, useState, useMemo, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { getStoredAdmin, logoutAdmin, AdminUser } from '@/services/authService';
-import { getProjects, createProject, deleteProject, Project } from '@/services/projectService';
-import { getExperiences, deleteExperience, ExperienceItem } from '@/services/experienceService';
-import { getCertificates, deleteCertificate, Certificate } from '@/services/certificateService';
-import { getArticles, deleteArticle, Article } from '@/services/articleService';
+import {
+  getProjects,
+  createProject,
+  deleteProject,
+  Project,
+  getAdminGithubRepos,
+  toggleGithubRepoVisibility,
+  GitHubRepoAdminItem,
+} from '@/services/projectService';
+import { getExperiences, createExperience, deleteExperience, ExperienceItem } from '@/services/experienceService';
+import { getCertificates, createCertificate, deleteCertificate, Certificate } from '@/services/certificateService';
 import { getContactMessages, deleteContactMessage, ContactMessage } from '@/services/contactService';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import {
   Briefcase,
-  FileText,
   FolderGit2,
   LogOut,
   Mail,
@@ -21,10 +27,14 @@ import {
   ExternalLink,
   Award,
   CheckCircle,
+  Eye,
+  EyeOff,
+  GitFork,
+  Star,
 } from 'lucide-react';
 import Link from 'next/link';
 
-type Tab = 'projects' | 'experience' | 'certificates' | 'articles' | 'messages';
+type Tab = 'projects' | 'github' | 'experience' | 'certificates' | 'messages';
 
 const subscribeStorage = (callback: () => void) => {
   window.addEventListener('storage', callback);
@@ -62,9 +72,10 @@ export default function AdminDashboardPage() {
 
   // Data states
   const [projects, setProjects] = useState<Project[]>([]);
+  const [githubRepos, setGithubRepos] = useState<GitHubRepoAdminItem[]>([]);
+  const [togglingRepoId, setTogglingRepoId] = useState<string | null>(null);
   const [experiences, setExperiences] = useState<ExperienceItem[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [articles, setArticles] = useState<Article[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
 
   // Simple Add Modals
@@ -80,6 +91,29 @@ export default function AdminDashboardPage() {
     repoUrl: '',
   });
 
+  const [showExpModal, setShowExpModal] = useState(false);
+  const [newExp, setNewExp] = useState({
+    type: 'work' as 'work' | 'education',
+    thTitle: '',
+    enTitle: '',
+    thOrg: '',
+    enOrg: '',
+    period: '',
+    thDesc: '',
+    enDesc: '',
+    skills: '',
+  });
+
+  const [showCertModal, setShowCertModal] = useState(false);
+  const [newCert, setNewCert] = useState({
+    thTitle: '',
+    enTitle: '',
+    issuer: '',
+    issueDate: '',
+    credentialUrl: '',
+    category: 'Full-Stack',
+  });
+
   useEffect(() => {
     const admin = getStoredAdmin();
     if (!admin) {
@@ -89,18 +123,18 @@ export default function AdminDashboardPage() {
 
     const fetchData = async () => {
       try {
-        const [p, exp, cert, art, msg] = await Promise.all([
+        const [p, exp, cert, msg, gh] = await Promise.all([
           getProjects(),
           getExperiences(),
           getCertificates(),
-          getArticles(),
           getContactMessages().catch(() => []),
+          getAdminGithubRepos().catch(() => []),
         ]);
         setProjects(p);
         setExperiences(exp);
         setCertificates(cert);
-        setArticles(art);
         setMessages(msg);
+        setGithubRepos(gh);
       } catch (err) {
         console.error('Failed to load admin data', err);
       }
@@ -161,7 +195,39 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Experience Delete
+  // Experience Actions
+  const handleCreateExperience = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const payload: Partial<ExperienceItem> = {
+        id: `exp-${Date.now()}`,
+        type: newExp.type,
+        title: { th: newExp.thTitle, en: newExp.enTitle },
+        organization: { th: newExp.thOrg, en: newExp.enOrg },
+        period: newExp.period,
+        description: { th: newExp.thDesc, en: newExp.enDesc },
+        skills: newExp.skills ? newExp.skills.split(',').map((s) => s.trim()) : [],
+      };
+      const created = await createExperience(payload).catch(() => payload as ExperienceItem);
+      setExperiences([created, ...experiences]);
+      setShowExpModal(false);
+      setNewExp({
+        type: 'work',
+        thTitle: '',
+        enTitle: '',
+        thOrg: '',
+        enOrg: '',
+        period: '',
+        thDesc: '',
+        enDesc: '',
+        skills: '',
+      });
+      notify('เพิ่มประวัติเรียบร้อยแล้ว!');
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Error creating experience');
+    }
+  };
+
   const handleDeleteExperience = async (id: string) => {
     if (!confirm('ยืนยันลบรายการนี้?')) return;
     try {
@@ -173,7 +239,36 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Certificate Delete
+  // Certificate Actions
+  const handleCreateCertificate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const payload: Partial<Certificate> = {
+        id: `cert-${Date.now()}`,
+        title: { th: newCert.thTitle, en: newCert.enTitle },
+        issuer: newCert.issuer,
+        issueDate: newCert.issueDate,
+        credentialUrl: newCert.credentialUrl,
+        category: newCert.category,
+        order: certificates.length + 1,
+      };
+      const created = await createCertificate(payload).catch(() => payload as Certificate);
+      setCertificates([created, ...certificates]);
+      setShowCertModal(false);
+      setNewCert({
+        thTitle: '',
+        enTitle: '',
+        issuer: '',
+        issueDate: '',
+        credentialUrl: '',
+        category: 'Full-Stack',
+      });
+      notify('เพิ่มใบรับรองเรียบร้อยแล้ว!');
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Error creating certificate');
+    }
+  };
+
   const handleDeleteCertificate = async (id: string) => {
     if (!confirm('ยืนยันลบใบรับรองนี้?')) return;
     try {
@@ -185,15 +280,20 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Article Delete
-  const handleDeleteArticle = async (id: string) => {
-    if (!confirm('ยืนยันลบบทความนี้?')) return;
+  // GitHub Repo Actions
+  const handleToggleGithubVisibility = async (repo: GitHubRepoAdminItem) => {
+    const nextState = !repo.isVisible;
+    setTogglingRepoId(String(repo.repoId));
     try {
-      await deleteArticle(id).catch((e) => console.warn('Backend API unavailable, updated locally', e));
-      setArticles((prev) => prev.filter((a) => a.id !== id));
-      notify('ลบบทความเรียบร้อย');
+      await toggleGithubRepoVisibility(repo.repoId, repo.name, nextState);
+      setGithubRepos((prev) =>
+        prev.map((r) => (r.repoId === repo.repoId ? { ...r, isVisible: nextState } : r))
+      );
+      notify(`ตั้งค่า "${repo.name}" เป็น ${nextState ? 'แสดงบนหน้าเว็บแล้ว 👁️' : 'ซ่อนจากหน้าเว็บแล้ว 🚫'}`);
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Error');
+      alert(err instanceof Error ? err.message : 'Error updating repo visibility');
+    } finally {
+      setTogglingRepoId(null);
     }
   };
 
@@ -275,6 +375,21 @@ export default function AdminDashboardPage() {
 
           <div className="p-4 rounded-xl border border-border-subtle bg-surface">
             <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600">
+                <FolderGit2 className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs text-muted">GitHub Repos</p>
+                <p className="text-xl font-bold text-foreground">
+                  {githubRepos.filter((r) => r.isVisible).length}
+                  <span className="text-xs font-normal text-muted ml-1">/ {githubRepos.length}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl border border-border-subtle bg-surface">
+            <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600">
                 <Briefcase className="w-5 h-5" />
               </div>
@@ -293,18 +408,6 @@ export default function AdminDashboardPage() {
               <div>
                 <p className="text-xs text-muted">ใบรับรอง</p>
                 <p className="text-xl font-bold text-foreground">{certificates.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl border border-border-subtle bg-surface">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600">
-                <FileText className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs text-muted">บทความ</p>
-                <p className="text-xl font-bold text-foreground">{articles.length}</p>
               </div>
             </div>
           </div>
@@ -337,6 +440,18 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
+            onClick={() => setActiveTab('github')}
+            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+              activeTab === 'github'
+                ? 'bg-surface border-t-2 border-t-accent text-accent font-bold border-x border-border-subtle'
+                : 'text-muted hover:text-foreground'
+            }`}
+          >
+            <FolderGit2 className="w-4 h-4" />
+            <span>GitHub Repos ({githubRepos.filter((r) => r.isVisible).length}/{githubRepos.length})</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('experience')}
             className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               activeTab === 'experience'
@@ -358,18 +473,6 @@ export default function AdminDashboardPage() {
           >
             <Award className="w-4 h-4" />
             <span>เกียรติบัตร/ใบรับรอง</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('articles')}
-            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-              activeTab === 'articles'
-                ? 'bg-surface border-t-2 border-t-accent text-accent font-bold border-x border-border-subtle'
-                : 'text-muted hover:text-foreground'
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            <span>บทความ</span>
           </button>
 
           <button
@@ -449,11 +552,135 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* Tab 2: Experience */}
+        {/* Tab 2: GitHub Repos */}
+        {activeTab === 'github' && (
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+              <div>
+                <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+                  <span>GitHub Repositories ทั้งหมด</span>
+                  <Badge variant="neutral" className="text-xs font-mono">
+                    เปิดโชว์ {githubRepos.filter((r) => r.isVisible).length} จาก {githubRepos.length} รายการ
+                  </Badge>
+                </h2>
+                <p className="text-xs text-muted mt-1">
+                  เลือกเปิดหรือปิดการแสดงผลแต่ละ Repository บนหน้า Portfolio สาธารณะ (ค่าเริ่มต้นจะถูกซ่อนไว้)
+                </p>
+              </div>
+            </div>
+
+            {githubRepos.length === 0 ? (
+              <div className="p-8 rounded-xl border border-border-subtle bg-surface text-center text-muted text-xs">
+                กำลังดึงข้อมูล Repositories จาก GitHub หรือยังไม่พบ Repository สาธารณะ
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {githubRepos.map((repo) => (
+                  <div
+                    key={repo.id}
+                    className={`p-4 rounded-xl border transition-all bg-surface flex flex-col justify-between gap-4 ${
+                      repo.isVisible
+                        ? 'border-accent/40 shadow-xs'
+                        : 'border-border-subtle opacity-75 hover:opacity-100'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <a
+                            href={repo.repoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-bold text-sm text-foreground hover:text-accent transition-colors truncate flex items-center gap-1.5"
+                          >
+                            <span>{repo.name}</span>
+                            <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                          </a>
+                          {repo.fork && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-subtle border border-border-subtle text-muted shrink-0">
+                              Fork
+                            </span>
+                          )}
+                        </div>
+
+                        {repo.isVisible ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 shrink-0">
+                            <Eye className="w-3 h-3" />
+                            <span>กำลังโชว์</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted bg-surface-subtle px-2 py-0.5 rounded-full border border-border-subtle shrink-0">
+                            <EyeOff className="w-3 h-3" />
+                            <span>ซ่อนอยู่</span>
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-muted mt-2 line-clamp-2">
+                        {repo.description || 'ไม่มีคำอธิบายสำหรับโปรเจกต์นี้'}
+                      </p>
+
+                      <div className="flex items-center gap-3 mt-3 text-[11px] text-muted">
+                        <span className="font-medium text-foreground">{repo.language}</span>
+                        {repo.stars > 0 && (
+                          <span className="flex items-center gap-1">
+                            <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                            <span>{repo.stars}</span>
+                          </span>
+                        )}
+                        {repo.forks > 0 && (
+                          <span className="flex items-center gap-1">
+                            <GitFork className="w-3 h-3" />
+                            <span>{repo.forks}</span>
+                          </span>
+                        )}
+                        <span className="ml-auto text-[10px] font-mono">
+                          อัปเดต: {new Date(repo.updatedAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-border-subtle/50 flex items-center justify-end">
+                      <Button
+                        size="sm"
+                        variant={repo.isVisible ? 'outline' : 'primary'}
+                        disabled={togglingRepoId === String(repo.repoId)}
+                        onClick={() => handleToggleGithubVisibility(repo)}
+                        className={`text-xs gap-1.5 focus-visible:ring-2 focus-visible:ring-accent ${
+                          repo.isVisible ? 'text-muted hover:text-foreground' : ''
+                        }`}
+                      >
+                        {togglingRepoId === String(repo.repoId) ? (
+                          <span>กำลังบันทึก...</span>
+                        ) : repo.isVisible ? (
+                          <>
+                            <EyeOff className="w-3.5 h-3.5" />
+                            <span>คลิกเพื่อซ่อน</span>
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>คลิกเพื่อเปิดโชว์</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 3: Experience */}
         {activeTab === 'experience' && (
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-bold text-foreground">ประวัติทำงานและการศึกษา</h2>
+              <Button size="sm" variant="primary" onClick={() => setShowExpModal(true)} className="gap-1.5 text-xs focus-visible:ring-2 focus-visible:ring-accent">
+                <Plus className="w-4 h-4" />
+                <span>เพิ่มประวัติใหม่</span>
+              </Button>
             </div>
             <div className="space-y-3">
               {experiences.map((e) => (
@@ -478,11 +705,15 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* Tab 3: Certificates */}
+        {/* Tab 4: Certificates */}
         {activeTab === 'certificates' && (
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-bold text-foreground">เกียรติบัตรและใบรับรอง</h2>
+              <Button size="sm" variant="primary" onClick={() => setShowCertModal(true)} className="gap-1.5 text-xs focus-visible:ring-2 focus-visible:ring-accent">
+                <Plus className="w-4 h-4" />
+                <span>เพิ่มใบรับรองใหม่</span>
+              </Button>
             </div>
             <div className="space-y-3">
               {certificates.map((c) => (
@@ -493,31 +724,6 @@ export default function AdminDashboardPage() {
                   </div>
                   <button
                     onClick={() => handleDeleteCertificate(c.id)}
-                    className="p-1.5 rounded text-rose-500 hover:bg-rose-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-accent"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Tab 4: Articles */}
-        {activeTab === 'articles' && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-foreground">บทความและบันทึกความรู้</h2>
-            </div>
-            <div className="space-y-3">
-              {articles.map((a) => (
-                <div key={a.id} className="p-4 rounded-xl border border-border-subtle bg-surface flex items-center justify-between">
-                  <div>
-                    <span className="font-bold text-foreground">{a.title.th}</span>
-                    <p className="text-xs text-muted mt-1">{a.category} • {a.readTime} • {a.publishedAt}</p>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteArticle(a.id)}
                     className="p-1.5 rounded text-rose-500 hover:bg-rose-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -675,6 +881,226 @@ export default function AdminDashboardPage() {
                   </Button>
                   <Button variant="primary" size="sm" type="submit" className="focus-visible:ring-2 focus-visible:ring-accent">
                     บันทึกผลงาน
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Experience Create Modal */}
+        {showExpModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+            <div className="w-full max-w-lg p-6 bg-surface border border-border-subtle rounded-xl shadow-xl max-h-[90vh] overflow-y-auto">
+              <h3 className="text-base font-bold text-foreground mb-4">
+                เพิ่มประวัติทำงาน/ศึกษา (Add Experience)
+              </h3>
+              <form onSubmit={handleCreateExperience} className="space-y-3 text-xs">
+                <div>
+                  <label className="font-semibold block mb-1 text-foreground">ประเภท</label>
+                  <select
+                    value={newExp.type}
+                    onChange={(e) => setNewExp({ ...newExp, type: e.target.value as 'work' | 'education' })}
+                    className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  >
+                    <option value="work">ประสบการณ์ทำงาน (Work)</option>
+                    <option value="education">ประวัติการศึกษา (Education)</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-semibold block mb-1 text-foreground">ตำแหน่ง / สาขาวิชา (ไทย)</label>
+                    <input
+                      type="text"
+                      required
+                      value={newExp.thTitle}
+                      onChange={(e) => setNewExp({ ...newExp, thTitle: e.target.value })}
+                      className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                      placeholder="เช่น Full-Stack Developer"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-semibold block mb-1 text-foreground">ตำแหน่ง / สาขาวิชา (อังกฤษ)</label>
+                    <input
+                      type="text"
+                      required
+                      value={newExp.enTitle}
+                      onChange={(e) => setNewExp({ ...newExp, enTitle: e.target.value })}
+                      className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                      placeholder="e.g. Full-Stack Developer"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-semibold block mb-1 text-foreground">บริษัท / สถาบัน (ไทย)</label>
+                    <input
+                      type="text"
+                      required
+                      value={newExp.thOrg}
+                      onChange={(e) => setNewExp({ ...newExp, thOrg: e.target.value })}
+                      className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                      placeholder="เช่น บจก. เทคโนโลยีอินโนเวชั่น"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-semibold block mb-1 text-foreground">บริษัท / สถาบัน (อังกฤษ)</label>
+                    <input
+                      type="text"
+                      required
+                      value={newExp.enOrg}
+                      onChange={(e) => setNewExp({ ...newExp, enOrg: e.target.value })}
+                      className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                      placeholder="e.g. Tech Innovation Co., Ltd."
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-semibold block mb-1 text-foreground">ช่วงเวลา (Period)</label>
+                    <input
+                      type="text"
+                      required
+                      value={newExp.period}
+                      onChange={(e) => setNewExp({ ...newExp, period: e.target.value })}
+                      className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                      placeholder="2024 - 2025"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-semibold block mb-1 text-foreground">ทักษะ / Skills (คั่นด้วยจุลภาค)</label>
+                    <input
+                      type="text"
+                      value={newExp.skills}
+                      onChange={(e) => setNewExp({ ...newExp, skills: e.target.value })}
+                      className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                      placeholder="Next.js, NestJS, Docker"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-semibold block mb-1 text-foreground">รายละเอียด (ไทย)</label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={newExp.thDesc}
+                    onChange={(e) => setNewExp({ ...newExp, thDesc: e.target.value })}
+                    className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1 text-foreground">รายละเอียด (อังกฤษ)</label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={newExp.enDesc}
+                    onChange={(e) => setNewExp({ ...newExp, enDesc: e.target.value })}
+                    className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-3">
+                  <Button variant="ghost" size="sm" type="button" onClick={() => setShowExpModal(false)} className="focus-visible:ring-2 focus-visible:ring-accent">
+                    ยกเลิก
+                  </Button>
+                  <Button variant="primary" size="sm" type="submit" className="focus-visible:ring-2 focus-visible:ring-accent">
+                    บันทึกประวัติ
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Certificate Create Modal */}
+        {showCertModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+            <div className="w-full max-w-lg p-6 bg-surface border border-border-subtle rounded-xl shadow-xl max-h-[90vh] overflow-y-auto">
+              <h3 className="text-base font-bold text-foreground mb-4">
+                เพิ่มใบรับรองใหม่ (Add Certificate)
+              </h3>
+              <form onSubmit={handleCreateCertificate} className="space-y-3 text-xs">
+                <div>
+                  <label className="font-semibold block mb-1 text-foreground">ชื่อใบรับรอง (ไทย)</label>
+                  <input
+                    type="text"
+                    required
+                    value={newCert.thTitle}
+                    onChange={(e) => setNewCert({ ...newCert, thTitle: e.target.value })}
+                    className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                    placeholder="เช่น ใบรับรอง Full-Stack Developer"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1 text-foreground">ชื่อใบรับรอง (อังกฤษ)</label>
+                  <input
+                    type="text"
+                    required
+                    value={newCert.enTitle}
+                    onChange={(e) => setNewCert({ ...newCert, enTitle: e.target.value })}
+                    className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                    placeholder="e.g. Full-Stack Web Development Certificate"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-semibold block mb-1 text-foreground">ผู้ออกใบรับรอง (Issuer)</label>
+                    <input
+                      type="text"
+                      required
+                      value={newCert.issuer}
+                      onChange={(e) => setNewCert({ ...newCert, issuer: e.target.value })}
+                      className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                      placeholder="Coursera / Meta / Google"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-semibold block mb-1 text-foreground">ปีที่ได้รับ (Issue Date)</label>
+                    <input
+                      type="text"
+                      required
+                      value={newCert.issueDate}
+                      onChange={(e) => setNewCert({ ...newCert, issueDate: e.target.value })}
+                      className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                      placeholder="2024"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-semibold block mb-1 text-foreground">หมวดหมู่ (Category)</label>
+                    <input
+                      type="text"
+                      value={newCert.category}
+                      onChange={(e) => setNewCert({ ...newCert, category: e.target.value })}
+                      className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                      placeholder="Full-Stack / Backend / Cloud"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-semibold block mb-1 text-foreground">Credential URL (ลิงก์ตรวจสอบ)</label>
+                    <input
+                      type="url"
+                      value={newCert.credentialUrl}
+                      onChange={(e) => setNewCert({ ...newCert, credentialUrl: e.target.value })}
+                      className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                      placeholder="https://coursera.org/verify/..."
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-3">
+                  <Button variant="ghost" size="sm" type="button" onClick={() => setShowCertModal(false)} className="focus-visible:ring-2 focus-visible:ring-accent">
+                    ยกเลิก
+                  </Button>
+                  <Button variant="primary" size="sm" type="submit" className="focus-visible:ring-2 focus-visible:ring-accent">
+                    บันทึกใบรับรอง
                   </Button>
                 </div>
               </form>

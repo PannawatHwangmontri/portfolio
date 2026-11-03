@@ -22,6 +22,21 @@ export class ProjectsController {
     return this.projectsService.findAll(category);
   }
 
+  @Get('github/admin')
+  @UseGuards(AuthGuard)
+  async findAllGithubReposAdmin() {
+    return this.projectsService.findAllGithubReposAdmin();
+  }
+
+  @Put('github/:repoId/visibility')
+  @UseGuards(AuthGuard)
+  async toggleGithubVisibility(
+    @Param('repoId') repoId: string,
+    @Body() body: { name: string; isVisible: boolean },
+  ) {
+    return this.projectsService.toggleGithubRepoVisibility(repoId, body.name, body.isVisible);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Project> {
     return this.projectsService.findOne(id);

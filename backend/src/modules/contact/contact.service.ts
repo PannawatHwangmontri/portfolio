@@ -1,11 +1,21 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service.js';
-import { ContactMessage, initialMessages } from './contact.data.js';
+import { ContactMessage } from './contact.data.js';
+
+function mapContactFromDb(row: Record<string, any>): ContactMessage {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    message: row.message,
+    read: row.read ?? false,
+    createdAt: row.created_at ?? row.createdAt ?? new Date().toISOString(),
+  };
+}
 
 @Injectable()
 export class ContactService {
   private readonly logger = new Logger(ContactService.name);
-  private memoryMessages: ContactMessage[] = [...initialMessages];
 
   constructor(private readonly supabaseService: SupabaseService) {}
 
@@ -22,60 +32,47 @@ export class ContactService {
       throw new BadRequestException('Message must be at least 5 characters');
     }
 
-    const newMessage: ContactMessage = {
+    const client = this.supabaseService.getClient();
+    const dbPayload = {
       id: `msg-${Date.now()}`,
       name: name.trim(),
       email: email.trim(),
       message: message.trim(),
-      createdAt: new Date().toISOString(),
       read: false,
+      created_at: new Date().toISOString(),
     };
 
-    const client = this.supabaseService.getClient();
-    if (client) {
-      try {
-        const { error } = await client.from('contacts').insert(newMessage);
-        if (!error) {
-          this.logger.log(`New contact message received from ${email}`);
-          return { success: true, message: 'Message sent successfully' };
-        }
-      } catch (err) {
-        this.logger.error('Error saving contact message to Supabase', err);
-      }
+    const { error } = await client.from('contacts').insert(dbPayload);
+    if (error) {
+      this.logger.error('Error saving contact message to Supabase', error);
+      throw new InternalServerErrorException(error.message);
     }
 
-    this.memoryMessages.unshift(newMessage);
-    this.logger.log(`New contact message saved in memory from ${email}`);
+    this.logger.log(`New contact message received from ${email}`);
     return { success: true, message: 'Message sent successfully' };
   }
 
   async findAll(): Promise<ContactMessage[]> {
     const client = this.supabaseService.getClient();
-    if (client) {
-      try {
-        const { data, error } = await client.from('contacts').select('*').order('createdAt', { ascending: false });
-        if (!error && data) return data as ContactMessage[];
-      } catch (err) {
-        this.logger.warn('Failed to fetch contact messages from Supabase', err);
-      }
+    const { data, error } = await client.from('contacts').select('*').order('created_at', { ascending: false });
+
+    if (error) {
+      this.logger.error('Failed to fetch contact messages from Supabase', error);
+      throw new InternalServerErrorException(`Database error: ${error.message}`);
     }
-    return this.memoryMessages;
+
+    return (data || []).map(mapContactFromDb);
   }
 
   async delete(id: string): Promise<{ success: boolean; message: string }> {
     const client = this.supabaseService.getClient();
-    if (client) {
-      try {
-        await client.from('contacts').delete().eq('id', id);
-      } catch (err) {
-        this.logger.error(`Error deleting contact ${id} on Supabase`, err);
-      }
+    const { error } = await client.from('contacts').delete().eq('id', id);
+
+    if (error) {
+      this.logger.error(`Error deleting contact ${id} on Supabase`, error);
+      throw new InternalServerErrorException(error.message);
     }
 
-    const index = this.memoryMessages.findIndex((m) => m.id === id);
-    if (index === -1) throw new NotFoundException(`Message ${id} not found`);
-
-    this.memoryMessages.splice(index, 1);
     return { success: true, message: `Message ${id} deleted` };
   }
 }

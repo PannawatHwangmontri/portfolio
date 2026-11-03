@@ -32,9 +32,6 @@ export function Navbar() {
           <a href="#certificates" className="hover:text-foreground transition-colors">
             {t('nav.certificates')}
           </a>
-          <a href="#articles" className="hover:text-foreground transition-colors">
-            {t('nav.articles')}
-          </a>
           <a href="#contact" className="hover:text-foreground transition-colors">
             {t('nav.contact')}
           </a>

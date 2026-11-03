@@ -1,47 +1,48 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service.js';
-import { ExperienceItem, initialExperiences } from './experience.data.js';
+import { ExperienceItem } from './experience.data.js';
 
 @Injectable()
 export class ExperienceService {
   private readonly logger = new Logger(ExperienceService.name);
-  private memoryExperiences: ExperienceItem[] = [...initialExperiences];
 
   constructor(private readonly supabaseService: SupabaseService) {}
 
   async findAll(type?: 'work' | 'education'): Promise<ExperienceItem[]> {
     const client = this.supabaseService.getClient();
-    if (client) {
-      try {
-        let query = client.from('experiences').select('*').order('order', { ascending: true });
-        if (type) {
-          query = query.eq('type', type);
-        }
-        const { data, error } = await query;
-        if (!error && data && data.length > 0) {
-          return data as ExperienceItem[];
-        }
-      } catch (err) {
-        this.logger.warn('Failed to fetch experiences from Supabase', err);
-      }
+    let query = client.from('experiences').select('*').order('order', { ascending: true });
+    if (type) {
+      query = query.eq('type', type);
     }
 
-    if (type) {
-      return this.memoryExperiences.filter((e) => e.type === type);
+    const { data, error } = await query;
+    if (error) {
+      this.logger.error('Failed to fetch experiences from Supabase', error);
+      throw new InternalServerErrorException(`Database error: ${error.message}`);
     }
-    return this.memoryExperiences;
+
+    return (data || []) as ExperienceItem[];
   }
 
   async findOne(id: string): Promise<ExperienceItem> {
-    const found = this.memoryExperiences.find((e) => e.id === id);
-    if (!found) {
+    const client = this.supabaseService.getClient();
+    const { data, error } = await client.from('experiences').select('*').eq('id', id).maybeSingle();
+
+    if (error) {
+      this.logger.error(`Failed to fetch experience ${id} from Supabase`, error);
+      throw new InternalServerErrorException(`Database error: ${error.message}`);
+    }
+
+    if (!data) {
       throw new NotFoundException(`Experience ${id} not found`);
     }
-    return found;
+
+    return data as ExperienceItem;
   }
 
   async create(payload: Partial<ExperienceItem>): Promise<ExperienceItem> {
-    const newItem: ExperienceItem = {
+    const client = this.supabaseService.getClient();
+    const newItem: Partial<ExperienceItem> = {
       id: payload.id || `exp-${Date.now()}`,
       type: payload.type || 'work',
       title: payload.title || { th: 'ตำแหน่ง/การศึกษาใหม่', en: 'New Role/Degree' },
@@ -49,62 +50,43 @@ export class ExperienceService {
       period: payload.period || '2025 - Present',
       description: payload.description || { th: '', en: '' },
       skills: payload.skills || [],
-      order: payload.order ?? this.memoryExperiences.length + 1,
+      order: payload.order ?? 1,
     };
 
-    const client = this.supabaseService.getClient();
-    if (client) {
-      try {
-        const { data, error } = await client.from('experiences').insert(newItem).select().single();
-        if (!error && data) return data as ExperienceItem;
-      } catch (err) {
-        this.logger.error('Error inserting experience to Supabase', err);
-      }
+    const { data, error } = await client.from('experiences').insert(newItem).select().single();
+    if (error || !data) {
+      this.logger.error('Error inserting experience to Supabase', error);
+      throw new InternalServerErrorException(error?.message || 'Failed to create experience');
     }
 
-    this.memoryExperiences.unshift(newItem);
-    return newItem;
+    return data as ExperienceItem;
   }
 
   async update(id: string, payload: Partial<ExperienceItem>): Promise<ExperienceItem> {
     const client = this.supabaseService.getClient();
-    if (client) {
-      try {
-        const { data, error } = await client.from('experiences').update(payload).eq('id', id).select().single();
-        if (!error && data) return data as ExperienceItem;
-      } catch (err) {
-        this.logger.error(`Error updating experience ${id} on Supabase`, err);
-      }
+    const { data, error } = await client.from('experiences').update(payload).eq('id', id).select().maybeSingle();
+
+    if (error) {
+      this.logger.error(`Error updating experience ${id} on Supabase`, error);
+      throw new InternalServerErrorException(error.message);
     }
 
-    const index = this.memoryExperiences.findIndex((e) => e.id === id);
-    if (index === -1) {
+    if (!data) {
       throw new NotFoundException(`Experience ${id} not found`);
     }
 
-    this.memoryExperiences[index] = {
-      ...this.memoryExperiences[index],
-      ...payload,
-    };
-    return this.memoryExperiences[index];
+    return data as ExperienceItem;
   }
 
   async delete(id: string): Promise<{ success: boolean; message: string }> {
     const client = this.supabaseService.getClient();
-    if (client) {
-      try {
-        await client.from('experiences').delete().eq('id', id);
-      } catch (err) {
-        this.logger.error(`Error deleting experience ${id} on Supabase`, err);
-      }
+    const { error } = await client.from('experiences').delete().eq('id', id);
+
+    if (error) {
+      this.logger.error(`Error deleting experience ${id} on Supabase`, error);
+      throw new InternalServerErrorException(error.message);
     }
 
-    const index = this.memoryExperiences.findIndex((e) => e.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Experience ${id} not found`);
-    }
-
-    this.memoryExperiences.splice(index, 1);
     return { success: true, message: `Experience ${id} deleted successfully` };
   }
 }

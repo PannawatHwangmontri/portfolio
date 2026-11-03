@@ -124,3 +124,41 @@ export async function deleteProject(id: string): Promise<{ success: boolean; mes
     return { success: true, message: `Project ${id} removed` };
   }
 }
+
+export interface GitHubRepoAdminItem {
+  id: string;
+  repoId: number;
+  name: string;
+  description: string;
+  fork: boolean;
+  language: string;
+  stars: number;
+  forks: number;
+  repoUrl: string;
+  demoUrl: string;
+  isVisible: boolean;
+  updatedAt: string;
+}
+
+export async function getAdminGithubRepos(): Promise<GitHubRepoAdminItem[]> {
+  try {
+    return await fetchApi<GitHubRepoAdminItem[]>('/projects/github/admin');
+  } catch (err) {
+    console.warn('Failed to fetch github repos for admin', err);
+    return [];
+  }
+}
+
+export async function toggleGithubRepoVisibility(
+  repoId: number | string,
+  name: string,
+  isVisible: boolean
+): Promise<{ success: boolean; repoId: string; isVisible: boolean }> {
+  return await fetchApi<{ success: boolean; repoId: string; isVisible: boolean }>(
+    `/projects/github/${repoId}/visibility`,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ name, isVisible }),
+    }
+  );
+}

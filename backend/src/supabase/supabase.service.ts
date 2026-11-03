@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 
 @Injectable()
@@ -6,14 +6,15 @@ export class SupabaseService {
   private readonly logger = new Logger(SupabaseService.name);
   private client: SupabaseClient | null = null;
 
-  getClient(): SupabaseClient | null {
+  getClient(): SupabaseClient {
     if (!this.client) {
       const url = process.env.SUPABASE_URL;
       const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
       if (!url || !key) {
-        this.logger.warn('Supabase credentials not configured in environment variables');
-        return null;
+        throw new InternalServerErrorException(
+          'Supabase credentials (SUPABASE_URL, SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY) are not configured'
+        );
       }
 
       this.client = createClient(url, key);
@@ -26,15 +27,8 @@ export class SupabaseService {
     return !!(process.env.SUPABASE_URL && (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY));
   }
 
-  async verifyToken(token: string): Promise<User | { id: string; email: string } | null> {
+  async verifyToken(token: string): Promise<User | null> {
     const client = this.getClient();
-    if (!client) {
-      // Development fallback when Supabase is not yet configured
-      if (token === 'dev-admin-token' || process.env.NODE_ENV !== 'production') {
-        return { id: 'dev-admin', email: 'admin@pannawat.dev' };
-      }
-      return null;
-    }
 
     try {
       const { data, error } = await client.auth.getUser(token);

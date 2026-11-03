@@ -6,7 +6,6 @@
     "experience": "Experience",
     "certificates": "Certificates",
     "activities": "Activities",
-    "articles": "Articles",
     "contact": "Contact",
     "resume": "Download Resume",
     "admin": "Dashboard"
@@ -60,15 +59,6 @@
   "activities": {
     "title": "Activities & Hackathons",
     "subtitle": "Competitions, hackathons, and tech community involvement"
-  },
-  "articles": {
-    "title": "Articles & Insights",
-    "subtitle": "Sharing thoughts and guides on modern software engineering",
-    "readMore": "Read Article"
-  },
-  "testimonials": {
-    "title": "Testimonials",
-    "subtitle": "Words from mentors, colleagues, and collaborators"
   },
   "contact": {
     "title": "Get in Touch",

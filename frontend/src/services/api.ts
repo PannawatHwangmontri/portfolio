@@ -1,4 +1,7 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const API_BASE_URL = rawApiUrl.endsWith('/api')
+  ? rawApiUrl
+  : `${rawApiUrl.replace(/\/+$/, '')}/api`;
 
 export async function fetchApi<T>(
   endpoint: string,
