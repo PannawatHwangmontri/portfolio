@@ -2,9 +2,6 @@
 
 import React from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Trophy, Users } from 'lucide-react';
 
 export function ActivitiesSection() {
   const { locale, t } = useLanguage();
@@ -55,51 +52,55 @@ export function ActivitiesSection() {
   ];
 
   return (
-    <section id="activities" className="py-20 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+    <section id="activities" className="py-20 border-b border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#090A0F]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="max-w-3xl">
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+        <div className="max-w-3xl mb-12">
+          <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
             {t('activities.title')}
           </h2>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-xs font-mono text-slate-400">
             {t('activities.subtitle')}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {activities.map((act) => (
-            <Card key={act.id} className="flex flex-col justify-between border-slate-200 dark:border-slate-800">
+            <div
+              key={act.id}
+              className="p-6 sm:p-7 rounded-lg bg-white dark:bg-[#090A0F] border border-slate-200/90 dark:border-slate-800/90 flex flex-col justify-between"
+            >
               <div>
-                <div className="flex items-center justify-between gap-2 mb-4">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 text-xs font-semibold border border-amber-200 dark:border-amber-800">
-                    <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                    <span>{act.award[locale]}</span>
-                  </div>
-                  <span className="text-xs font-mono text-slate-400">{act.year}</span>
+                <div className="flex items-center justify-between text-xs font-mono mb-3">
+                  <span className="text-sky-600 dark:text-sky-400 font-medium">
+                    {act.award[locale]}
+                  </span>
+                  <span className="text-slate-400">{act.year}</span>
                 </div>
 
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                <h3 className="text-base font-semibold text-slate-900 dark:text-white">
                   {act.title[locale]}
                 </h3>
 
-                <div className="flex items-center gap-2 mt-1 text-xs text-sky-600 font-medium">
-                  <Users className="w-3.5 h-3.5" />
-                  <span>{act.role[locale]}</span>
-                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Role: <span className="text-slate-700 dark:text-slate-300 font-medium">{act.role[locale]}</span>
+                </p>
 
-                <p className="mt-3 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-light">
                   {act.description[locale]}
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-1.5 mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex flex-wrap gap-1.5 mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
                 {act.tags.map((tag) => (
-                  <Badge key={tag} variant="neutral">
+                  <span
+                    key={tag}
+                    className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                  >
                     {tag}
-                  </Badge>
+                  </span>
                 ))}
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       </div>

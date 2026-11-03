@@ -2,9 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { ExternalLink } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { Github } from '@/components/ui/Icons';
 import { getProjects, Project } from '@/services/projectService';
 
@@ -25,28 +23,29 @@ export function ProjectsSection() {
   ];
 
   return (
-    <section id="projects" className="py-20 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
+    <section id="projects" className="py-20 border-b border-slate-200/80 dark:border-slate-800/80 bg-[#FAFAFA] dark:bg-[#0D0F17]/50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="max-w-3xl">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+        {/* Section Header with Category Switcher */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
               {t('projects.title')}
             </h2>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-1 text-xs font-mono text-slate-400">
               {t('projects.subtitle')}
             </p>
           </div>
 
-          {/* Category Filters */}
-          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 self-start md:self-auto">
+          {/* Understated Category Filter */}
+          <div className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-800 pb-1">
             {categories.map((cat) => (
               <button
                 key={cat.key}
                 onClick={() => setActiveCategory(cat.key)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                className={`px-3 py-1 text-xs font-medium transition-colors cursor-pointer rounded ${
                   activeCategory === cat.key
-                    ? 'bg-sky-600 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'text-slate-900 dark:text-white font-semibold bg-slate-200/70 dark:bg-slate-800'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 {cat.label}
@@ -55,39 +54,49 @@ export function ProjectsSection() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
-          {projects.map((project) => (
-            <Card key={project.id} className="flex flex-col justify-between hover:border-sky-300 dark:hover:border-sky-700 transition-colors">
+        {/* Projects Editorial Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {projects.map((project, idx) => (
+            <div
+              key={project.id}
+              className="group p-6 sm:p-7 rounded-lg bg-white dark:bg-[#090A0F] border border-slate-200/90 dark:border-slate-800/90 hover:border-slate-400 dark:hover:border-slate-600 transition-all flex flex-col justify-between"
+            >
               <div>
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                    {project.title[locale]}
-                  </h3>
-                  <Badge variant="neutral">{project.category}</Badge>
+                <div className="flex items-center justify-between text-xs font-mono text-slate-400 mb-4">
+                  <span>{(idx + 1).toString().padStart(2, '0')}</span>
+                  <span className="uppercase text-[11px] tracking-wider text-slate-500">{project.category}</span>
                 </div>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white tracking-tight group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                  {project.title[locale]}
+                </h3>
+
+                <p className="mt-2.5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-light">
                   {project.description[locale]}
                 </p>
 
-                <div className="flex flex-wrap gap-1.5 mt-4">
+                <div className="flex flex-wrap gap-1.5 mt-5">
                   {project.tags.map((tag) => (
-                    <Badge key={tag} variant="neutral">
+                    <span
+                      key={tag}
+                      className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                    >
                       {tag}
-                    </Badge>
+                    </span>
                   ))}
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs font-medium">
+              <div className="flex items-center gap-5 mt-7 pt-4 border-t border-slate-100 dark:border-slate-800/80 text-xs font-medium">
                 {project.demoUrl && project.demoUrl !== '#' && (
                   <a
                     href={project.demoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sky-600 hover:text-sky-700 font-semibold"
+                    className="inline-flex items-center gap-1 text-slate-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400 font-medium transition-colors"
                   >
-                    <ExternalLink className="w-3.5 h-3.5" />
                     <span>{t('projects.liveDemo')}</span>
+                    <ArrowUpRight className="w-3.5 h-3.5" />
                   </a>
                 )}
                 {project.repoUrl && (
@@ -95,14 +104,14 @@ export function ProjectsSection() {
                     href={project.repoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
                   >
-                    <Github className="w-3.5 h-3.5" />
+                    <Github size={13} />
                     <span>{t('projects.sourceCode')}</span>
                   </a>
                 )}
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       </div>

@@ -2,9 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Award, ExternalLink } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { Certificate, getCertificates } from '@/services/certificateService';
 
 export function CertificatesSection() {
@@ -16,49 +14,51 @@ export function CertificatesSection() {
   }, []);
 
   return (
-    <section id="certificates" className="py-20 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
+    <section id="certificates" className="py-20 border-b border-slate-200/80 dark:border-slate-800/80 bg-[#FAFAFA] dark:bg-[#0D0F17]/50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="max-w-3xl">
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+        <div className="max-w-3xl mb-12">
+          <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
             {t('certificates.title')}
           </h2>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-xs font-mono text-slate-400">
             {t('certificates.subtitle')}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {certs.map((cert) => (
-            <Card key={cert.id} className="flex flex-col justify-between hover:border-sky-300 dark:hover:border-sky-700 transition-colors">
+            <div
+              key={cert.id}
+              className="p-6 rounded-lg bg-white dark:bg-[#090A0F] border border-slate-200/90 dark:border-slate-800/90 hover:border-slate-400 dark:hover:border-slate-600 transition-colors flex flex-col justify-between"
+            >
               <div>
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="p-2 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 border border-sky-100 dark:border-sky-800">
-                    <Award className="w-5 h-5" />
-                  </div>
-                  {cert.category && <Badge variant="neutral">{cert.category}</Badge>}
+                <div className="flex items-center justify-between text-xs font-mono text-slate-400 mb-3">
+                  <span>{cert.issueDate}</span>
+                  {cert.category && <span>{cert.category}</span>}
                 </div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white leading-snug">
                   {cert.title[locale]}
                 </h3>
-                <p className="mt-1 text-xs text-slate-500 font-medium">
-                  {cert.issuer} • <span className="font-mono">{cert.issueDate}</span>
+                <p className="mt-1.5 text-xs text-slate-500 font-light">
+                  {cert.issuer}
                 </p>
               </div>
 
               {cert.credentialUrl && (
-                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
                   <a
                     href={cert.credentialUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 hover:text-sky-700 transition-colors"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
                   >
                     <span>{t('certificates.viewCredential')}</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
+                    <ArrowUpRight className="w-3.5 h-3.5" />
                   </a>
                 </div>
               )}
-            </Card>
+            </div>
           ))}
         </div>
       </div>

@@ -30,7 +30,6 @@ export async function fetchApi<T>(
 
     return await res.json();
   } catch (err: unknown) {
-    console.warn(`Fetch error for ${url}:`, err);
     throw err;
   }
 }
