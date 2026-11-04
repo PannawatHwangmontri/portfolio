@@ -60,7 +60,7 @@ export function ProjectsSection() {
           {projects.map((project, idx) => (
             <div
               key={project.id}
-              className="group p-8 sm:p-9 rounded-2xl bg-[#0e2c32] border border-[#1d4c55] hover:border-[#406e7a] transition-all duration-200 flex flex-col justify-between shadow-none"
+              className="card-spring-hover group p-8 sm:p-9 rounded-2xl bg-[#0e2c32] border border-[#1d4c55] hover:border-[#406e7a] flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between text-xs font-mono text-[#afaeae] mb-4">

@@ -49,7 +49,7 @@ export function CertificatesSection() {
             return (
               <div
                 key={cert.id}
-                className="p-7 sm:p-8 rounded-2xl bg-white border border-[#e1dad9] hover:border-[#000000]/60 transition-all duration-200 flex flex-col justify-between group/card shadow-none"
+                className="card-spring-hover p-7 sm:p-8 rounded-2xl bg-white border border-[#e1dad9] hover:border-[#000000]/60 flex flex-col justify-between group/card"
               >
                 <div>
                   {hasImage && cert.credentialUrl && (

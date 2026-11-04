@@ -58,7 +58,7 @@ export function SkillsSection() {
             return (
               <div
                 key={group.id}
-                className={`p-8 sm:p-9 rounded-2xl border flex flex-col justify-between transition-all duration-200 shadow-none ${theme.wallClass}`}
+                className={`card-spring-hover p-8 sm:p-9 rounded-2xl border flex flex-col justify-between ${theme.wallClass}`}
               >
                 <div>
                   <h3 className={`font-serif text-2xl font-bold tracking-tight mb-4 ${theme.titleClass}`}>

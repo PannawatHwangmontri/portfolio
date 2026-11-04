@@ -37,7 +37,7 @@
 | 2026-11-04 | Fix Empty Section Flash & Merge Main | [2026-11-04-fix-empty-section-flash-and-merge-main.md](file:///d:/Intren/portfolio/agent_logs/2026-11-04-fix-empty-section-flash-and-merge-main.md) | เพิ่ม Fallback State ใน Experience/Projects/Certificates ป้องกันหน้าเว็บกะพริบช่องว่างระหว่างรอ API, ผ่าน Turbopack build และ Merge เข้าสู่ `main` พร้อม Push ขึ้น GitHub สำเร็จ |
 | 2026-11-04 | Admin Editable Hero Section (CMS) | [2026-11-04-admin-editable-hero-section.md](file:///d:/Intren/portfolio/agent_logs/2026-11-04-admin-editable-hero-section.md) | เพิ่มระบบจัดการเนื้อหา Hero Section ใน Admin Dashboard (Location, Status, Role, Name, Bio, Social Links) รองรับ i18n เชื่อมต่อ NestJS API & Supabase พร้อม Fallback |
 | 2026-11-04 | Fix Contact Messages & Supabase RLS Auth | [2026-11-04-fix-contact-messages-and-rls-auth.md](file:///d:/Intren/portfolio/agent_logs/2026-11-04-fix-contact-messages-and-rls-auth.md) | แก้ไขระบบ Contact Form และการส่งต่อ Admin Token ไปยัง Supabase RLS แก้ปัญหาข้อความไม่แสดงในหน้า Admin Dashboard และลบ Silent Catch ออก |
-| 2026-11-04 | Fix Hero Production Sync & Railway CI/CD | [2026-11-04-fix-hero-production-sync.md](file:///d:/Intren/portfolio/agent_logs/2026-11-04-fix-hero-production-sync.md) | แก้ไขการซิงก์ข้อมูล Hero Section สู่ Production โดย Trigger Deploy Backend ล่าสุดบน Railway และอัปเดต Fallback Defaults ให้ตรงกัน |
+| 2026-11-04 | Overshooting Spring Hover Lift on Cards | [2026-11-04-card-spring-hover-animation.md](file:///d:/Intren/portfolio/agent_logs/2026-11-04-card-spring-hover-animation.md) | เพิ่มแอนิเมชัน hover ยกตัว translateY(-10px) พร้อมเงา soft cast shadow และ overshooting spring cubic-bezier บนการ์ดทุกส่วน (Projects, Skills, Certificates) |
 
 
 
