@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { ExperienceItem, getExperiences } from '@/services/experienceService';
+import { ExperienceItem, fallbackExperiences, getExperiences } from '@/services/experienceService';
 
 export function ExperienceSection() {
   const { locale, t } = useLanguage();
-  const [items, setItems] = useState<ExperienceItem[]>([]);
+  const [items, setItems] = useState<ExperienceItem[]>(fallbackExperiences);
 
   useEffect(() => {
     getExperiences().then(setItems);

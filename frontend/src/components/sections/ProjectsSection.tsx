@@ -4,11 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { ArrowUpRight } from 'lucide-react';
 import { Github } from '@/components/ui/Icons';
-import { getProjects, Project } from '@/services/projectService';
+import { getProjects, Project, fallbackProjects } from '@/services/projectService';
 
 export function ProjectsSection() {
   const { locale, t } = useLanguage();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>(fallbackProjects);
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
   useEffect(() => {

@@ -83,7 +83,10 @@ export const fallbackExperiences: ExperienceItem[] = [
 export async function getExperiences(type?: 'work' | 'education'): Promise<ExperienceItem[]> {
   try {
     const query = type ? `?type=${type}` : '';
-    return await fetchApi<ExperienceItem[]>(`/experience${query}`);
+    const res = await fetchApi<ExperienceItem[]>(`/experience${query}`);
+    if (res && res.length > 0) return res;
+    if (type) return fallbackExperiences.filter((e) => e.type === type);
+    return fallbackExperiences;
   } catch {
     if (type) return fallbackExperiences.filter((e) => e.type === type);
     return fallbackExperiences;

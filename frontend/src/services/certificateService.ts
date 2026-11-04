@@ -54,7 +54,9 @@ export const fallbackCertificates: Certificate[] = [
 
 export async function getCertificates(): Promise<Certificate[]> {
   try {
-    return await fetchApi<Certificate[]>('/certificates');
+    const res = await fetchApi<Certificate[]>('/certificates');
+    if (res && res.length > 0) return res;
+    return fallbackCertificates;
   } catch {
     return fallbackCertificates;
   }

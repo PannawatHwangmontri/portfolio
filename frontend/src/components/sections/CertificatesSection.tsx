@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { ArrowUpRight, Eye, X, ExternalLink } from 'lucide-react';
-import { Certificate, getCertificates } from '@/services/certificateService';
+import { Certificate, fallbackCertificates, getCertificates } from '@/services/certificateService';
 
 function isImageUrl(url?: string): boolean {
   if (!url) return false;
@@ -16,7 +16,7 @@ function isImageUrl(url?: string): boolean {
 
 export function CertificatesSection() {
   const { locale, t } = useLanguage();
-  const [certs, setCerts] = useState<Certificate[]>([]);
+  const [certs, setCerts] = useState<Certificate[]>(fallbackCertificates);
   const [activeModalImage, setActiveModalImage] = useState<{ url: string; title: string } | null>(null);
 
   useEffect(() => {
