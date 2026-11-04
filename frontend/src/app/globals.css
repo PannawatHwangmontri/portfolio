@@ -130,3 +130,35 @@ body {
     transform: none !important;
   }
 }
+
+/* Skeleton Shimmer Sweep (3-stop linear-gradient, 200% size, 200% to -200% over 1.4s ease-in-out) */
+@keyframes shimmer-sweep {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-shimmer-dark {
+  background: linear-gradient(
+    90deg,
+    rgba(29, 76, 85, 0.45) 0%,
+    rgba(64, 110, 122, 0.85) 50%,
+    rgba(29, 76, 85, 0.45) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-sweep 1.4s ease-in-out infinite;
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(225, 218, 217, 0.4) 0%,
+    rgba(215, 206, 204, 0.85) 50%,
+    rgba(225, 218, 217, 0.4) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-sweep 1.4s ease-in-out infinite;
+}
