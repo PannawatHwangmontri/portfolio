@@ -4,6 +4,7 @@ import { ProfileService } from './profile.service.js';
 import {
   AboutContent,
   ContactInfoContent,
+  HeroContent,
   SiteContent,
   SkillsContent,
 } from './site-content.data.js';
@@ -15,6 +16,12 @@ export class ProfileController {
   @Get()
   async getContent(): Promise<SiteContent> {
     return this.profileService.getContent();
+  }
+
+  @Put('hero')
+  @UseGuards(AuthGuard)
+  async updateHero(@Body() payload: Partial<HeroContent>): Promise<HeroContent> {
+    return this.profileService.updateHero(payload);
   }
 
   @Put('about')

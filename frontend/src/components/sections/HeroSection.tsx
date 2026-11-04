@@ -1,16 +1,26 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { ArrowUpRight } from 'lucide-react';
 import { Github, Linkedin } from '@/components/ui/Icons';
 import { HeroShaderBackground } from '@/components/ui/HeroShaderBackground';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
+import { fallbackHeroContent, getSiteContent, HeroContent } from '@/services/profileService';
 
 export function HeroSection() {
-  const { t } = useLanguage();
+  const { locale, t } = useLanguage();
   const heroRef = useRef<HTMLDivElement>(null);
+  const [hero, setHero] = useState<HeroContent>(fallbackHeroContent);
+
+  useEffect(() => {
+    getSiteContent().then((content) => {
+      if (content?.hero) {
+        setHero(content.hero);
+      }
+    });
+  }, []);
 
   useGSAP(
     () => {
@@ -38,25 +48,25 @@ export function HeroSection() {
         <div className="max-w-4xl">
           {/* Status Ledger */}
           <div className="hero-reveal text-xs font-mono text-[#afaeae] mb-6 flex flex-wrap items-center gap-2.5 tracking-wider">
-            <span className="text-white/90">BANGKOK, TH</span>
+            <span className="text-white/90">{hero.location || 'BANGKOK, TH'}</span>
             <span className="text-[#406e7a]">/</span>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-[#406e7a]/40 text-[#d4e6eb] border border-[#406e7a]/60 text-[11px] font-mono">
-              AVAILABLE FOR ENGINEERING ROLES
+              {hero.statusBadge?.[locale] || hero.statusBadge?.en || 'AVAILABLE FOR ENGINEERING ROLES'}
             </span>
           </div>
 
           {/* Monumental 11x Serif Headline (74-100px with -0.04em tracking) */}
           <h1 className="hero-reveal font-serif text-5xl sm:text-7xl lg:text-[88px] font-bold text-white tracking-[-0.04em] leading-[0.96]">
-            {t('hero.role')}
+            {hero.role?.[locale] || t('hero.role')}
           </h1>
 
           {/* Editorial Name Subheading */}
           <p className="hero-reveal mt-5 font-serif text-2xl sm:text-3xl font-medium text-white/85 tracking-[-0.02em] leading-snug">
-            {t('hero.name')}
+            {hero.name?.[locale] || t('hero.name')}
           </p>
 
           <p className="hero-reveal mt-6 text-base sm:text-lg text-[#afaeae] leading-relaxed max-w-2xl font-light">
-            {t('hero.description')}
+            {hero.description?.[locale] || t('hero.description')}
           </p>
 
           {/* 11x Pill Button Action Row: White primary pill + adjacent ghost link */}
@@ -79,7 +89,7 @@ export function HeroSection() {
             {/* Social channels as understated text-links */}
             <div className="flex items-center gap-5 sm:ml-4 text-xs text-[#afaeae]">
               <a
-                href="https://github.com/PannawatHwangmontri"
+                href={hero.githubUrl || 'https://github.com/PannawatHwangmontri'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-white inline-flex items-center gap-1.5 transition-colors"
@@ -88,7 +98,7 @@ export function HeroSection() {
                 <span>GitHub</span>
               </a>
               <a
-                href="https://linkedin.com"
+                href={hero.linkedinUrl || 'https://linkedin.com'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-white inline-flex items-center gap-1.5 transition-colors"

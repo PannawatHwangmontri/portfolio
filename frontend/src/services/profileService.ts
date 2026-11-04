@@ -5,6 +5,16 @@ export interface I18nString {
   en: string;
 }
 
+export interface HeroContent {
+  location: string;
+  statusBadge: I18nString;
+  role: I18nString;
+  name: I18nString;
+  description: I18nString;
+  githubUrl: string;
+  linkedinUrl: string;
+}
+
 export interface AboutContent {
   title: I18nString;
   subtitle: I18nString;
@@ -33,12 +43,36 @@ export interface ContactInfoContent {
 }
 
 export interface SiteContent {
+  hero: HeroContent;
   about: AboutContent;
   skills: SkillsContent;
   contactInfo: ContactInfoContent;
 }
 
+export const fallbackHeroContent: HeroContent = {
+  location: 'BANGKOK, TH',
+  statusBadge: {
+    th: 'พร้อมรับงานวิศวกรรมซอฟต์แวร์',
+    en: 'AVAILABLE FOR ENGINEERING ROLES',
+  },
+  role: {
+    th: 'Full-Stack Developer & Software Engineer',
+    en: 'Full-Stack Developer & Software Engineer',
+  },
+  name: {
+    th: 'พัฒนวัชร์ หวังมนตรี',
+    en: 'Pannawat Hwangmontri',
+  },
+  description: {
+    th: 'มุ่งมั่นพัฒนาระบบเว็บแอปพลิเคชันที่รวดเร็ว ปลอดภัย และมีประสบการณ์การใช้งานที่ราบรื่นด้วยสถาปัตยกรรมที่ทันสมัย',
+    en: 'Dedicated to architecting high-performance, resilient web platforms with clean code and seamless user experiences.',
+  },
+  githubUrl: 'https://github.com/PannawatHwangmontri',
+  linkedinUrl: 'https://linkedin.com',
+};
+
 export const fallbackSiteContent: SiteContent = {
+  hero: fallbackHeroContent,
   about: {
     title: {
       th: 'เกี่ยวกับฉัน',
@@ -108,6 +142,7 @@ export async function getSiteContent(): Promise<SiteContent> {
   try {
     const data = await fetchApi<SiteContent>('/profile');
     return {
+      hero: { ...fallbackSiteContent.hero, ...(data?.hero || {}) },
       about: { ...fallbackSiteContent.about, ...(data?.about || {}) },
       skills: { ...fallbackSiteContent.skills, ...(data?.skills || {}) },
       contactInfo: { ...fallbackSiteContent.contactInfo, ...(data?.contactInfo || {}) },
@@ -115,6 +150,13 @@ export async function getSiteContent(): Promise<SiteContent> {
   } catch {
     return fallbackSiteContent;
   }
+}
+
+export async function updateHeroContent(payload: Partial<HeroContent>): Promise<HeroContent> {
+  return fetchApi<HeroContent>('/profile/hero', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function updateAboutContent(payload: Partial<AboutContent>): Promise<AboutContent> {

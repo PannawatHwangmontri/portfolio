@@ -5,7 +5,9 @@ import {
   ContactInfoContent,
   DEFAULT_ABOUT_CONTENT,
   DEFAULT_CONTACT_INFO,
+  DEFAULT_HERO_CONTENT,
   DEFAULT_SKILLS_CONTENT,
+  HeroContent,
   SiteContent,
   SkillsContent,
 } from './site-content.data.js';
@@ -18,6 +20,7 @@ export class ProfileService {
 
   async getContent(): Promise<SiteContent> {
     const content: SiteContent = {
+      hero: { ...DEFAULT_HERO_CONTENT },
       about: { ...DEFAULT_ABOUT_CONTENT },
       skills: { ...DEFAULT_SKILLS_CONTENT },
       contactInfo: { ...DEFAULT_CONTACT_INFO },
@@ -40,7 +43,9 @@ export class ProfileService {
 
       if (data && Array.isArray(data)) {
         for (const item of data) {
-          if (item.key === 'about' && item.data) {
+          if (item.key === 'hero' && item.data) {
+            content.hero = { ...DEFAULT_HERO_CONTENT, ...item.data };
+          } else if (item.key === 'about' && item.data) {
             content.about = { ...DEFAULT_ABOUT_CONTENT, ...item.data };
           } else if (item.key === 'skills' && item.data) {
             content.skills = { ...DEFAULT_SKILLS_CONTENT, ...item.data };
@@ -55,6 +60,33 @@ export class ProfileService {
     }
 
     return content;
+  }
+
+  async updateHero(payload: Partial<HeroContent>): Promise<HeroContent> {
+    const current = await this.getContent();
+    const updated: HeroContent = {
+      ...current.hero,
+      ...payload,
+    };
+
+    if (this.supabaseService.isConfigured()) {
+      const client = this.supabaseService.getClient();
+      const { error } = await client.from('site_content').upsert(
+        {
+          key: 'hero',
+          data: updated,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'key' },
+      );
+
+      if (error) {
+        this.logger.error(`Failed to update hero content: ${error.message}`);
+        throw new InternalServerErrorException(`Database error: ${error.message}`);
+      }
+    }
+
+    return updated;
   }
 
   async updateAbout(payload: Partial<AboutContent>): Promise<AboutContent> {

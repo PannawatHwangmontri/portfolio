@@ -23,9 +23,12 @@ import {
 import { getContactMessages, deleteContactMessage, ContactMessage } from '@/services/contactService';
 import {
   getSiteContent,
+  updateHeroContent,
   updateAboutContent,
   updateSkillsContent,
   updateContactInfoContent,
+  HeroContent,
+  fallbackHeroContent,
   AboutContent,
   SkillsContent,
   ContactInfoContent,
@@ -53,6 +56,7 @@ import {
   Layers,
   PhoneCall,
   Save,
+  LayoutTemplate,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -62,6 +66,7 @@ type Tab =
   | 'experience'
   | 'certificates'
   | 'messages'
+  | 'hero'
   | 'about'
   | 'skills'
   | 'contact_info';
@@ -148,6 +153,8 @@ export default function AdminDashboardPage() {
   });
 
   // Profile / Site Content states
+  const [heroForm, setHeroForm] = useState<HeroContent>(fallbackHeroContent);
+  const [savingHero, setSavingHero] = useState(false);
   const [aboutForm, setAboutForm] = useState<AboutContent>(fallbackSiteContent.about);
   const [skillsForm, setSkillsForm] = useState<SkillsContent>(fallbackSiteContent.skills);
   const [contactInfoForm, setContactInfoForm] = useState<ContactInfoContent>(fallbackSiteContent.contactInfo);
@@ -180,6 +187,7 @@ export default function AdminDashboardPage() {
         setMessages(msg);
         setGithubRepos(gh);
         if (sc) {
+          if (sc.hero) setHeroForm(sc.hero);
           if (sc.about) setAboutForm(sc.about);
           if (sc.skills) setSkillsForm(sc.skills);
           if (sc.contactInfo) setContactInfoForm(sc.contactInfo);
@@ -194,6 +202,20 @@ export default function AdminDashboardPage() {
   const notify = (msg: string) => {
     setStatusMsg(msg);
     setTimeout(() => setStatusMsg(''), 3000);
+  };
+
+  const handleSaveHero = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingHero(true);
+    try {
+      await updateHeroContent(heroForm);
+      notify('บันทึกข้อมูลส่วน "หน้าแรก (Hero)" เรียบร้อยแล้ว');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+      notify(`บันทึกไม่สำเร็จ: ${msg}`);
+    } finally {
+      setSavingHero(false);
+    }
   };
 
   const handleSaveAbout = async (e: React.FormEvent) => {
@@ -666,6 +688,18 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
+            onClick={() => setActiveTab('hero')}
+            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+              activeTab === 'hero'
+                ? 'bg-surface border-t-2 border-t-accent text-accent font-bold border-x border-border-subtle'
+                : 'text-muted hover:text-foreground'
+            }`}
+          >
+            <LayoutTemplate className="w-4 h-4" />
+            <span>หน้าแรก (Hero)</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('about')}
             className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               activeTab === 'about'
@@ -1019,6 +1053,168 @@ export default function AdminDashboardPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Tab: Hero Content */}
+        {activeTab === 'hero' && (
+          <div className="bg-surface rounded-xl border border-border-subtle p-6 max-w-4xl shadow-none">
+            <div className="mb-6 pb-4 border-b border-border-subtle flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-foreground">แก้ไขส่วนหัว &ldquo;หน้าแรก&rdquo; (Hero Section)</h2>
+                <p className="text-xs text-muted mt-1">
+                  ปรับแต่งตำแหน่งที่ตั้ง สถานะการรับงาน หัวข้อหลัก ชื่อ-นามสกุล ข้อความแนะนำตัว และลิงก์โซเชียล
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveHero} className="space-y-6 text-xs">
+              {/* Location & Status Badge */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">ตำแหน่งที่ตั้ง / Location</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="BANGKOK, TH"
+                    value={heroForm.location}
+                    onChange={(e) => setHeroForm({ ...heroForm, location: e.target.value })}
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">สถานะรับงาน (ภาษาไทย)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="พร้อมรับงานวิศวกรรมซอฟต์แวร์"
+                    value={heroForm.statusBadge.th}
+                    onChange={(e) =>
+                      setHeroForm({ ...heroForm, statusBadge: { ...heroForm.statusBadge, th: e.target.value } })
+                    }
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">Status Badge (English)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="AVAILABLE FOR ENGINEERING ROLES"
+                    value={heroForm.statusBadge.en}
+                    onChange={(e) =>
+                      setHeroForm({ ...heroForm, statusBadge: { ...heroForm.statusBadge, en: e.target.value } })
+                    }
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  />
+                </div>
+              </div>
+
+              {/* Role / Headline */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">หัวข้อตำแหน่ง / Role (ภาษาไทย)</label>
+                  <input
+                    type="text"
+                    required
+                    value={heroForm.role.th}
+                    onChange={(e) => setHeroForm({ ...heroForm, role: { ...heroForm.role, th: e.target.value } })}
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">Role / Headline (English)</label>
+                  <input
+                    type="text"
+                    required
+                    value={heroForm.role.en}
+                    onChange={(e) => setHeroForm({ ...heroForm, role: { ...heroForm.role, en: e.target.value } })}
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  />
+                </div>
+              </div>
+
+              {/* Name */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">ชื่อ-นามสกุล (ภาษาไทย)</label>
+                  <input
+                    type="text"
+                    required
+                    value={heroForm.name.th}
+                    onChange={(e) => setHeroForm({ ...heroForm, name: { ...heroForm.name, th: e.target.value } })}
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">Name (English)</label>
+                  <input
+                    type="text"
+                    required
+                    value={heroForm.name.en}
+                    onChange={(e) => setHeroForm({ ...heroForm, name: { ...heroForm.name, en: e.target.value } })}
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-4">
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">คำอธิบายโปรไฟล์ย่อ (ภาษาไทย)</label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={heroForm.description.th}
+                    onChange={(e) =>
+                      setHeroForm({ ...heroForm, description: { ...heroForm.description, th: e.target.value } })
+                    }
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent leading-relaxed"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">Short Description (English)</label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={heroForm.description.en}
+                    onChange={(e) =>
+                      setHeroForm({ ...heroForm, description: { ...heroForm.description, en: e.target.value } })
+                    }
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent leading-relaxed"
+                  />
+                </div>
+              </div>
+
+              {/* Social URLs */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">GitHub Profile URL</label>
+                  <input
+                    type="url"
+                    value={heroForm.githubUrl}
+                    onChange={(e) => setHeroForm({ ...heroForm, githubUrl: e.target.value })}
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">LinkedIn Profile URL</label>
+                  <input
+                    type="url"
+                    value={heroForm.linkedinUrl}
+                    onChange={(e) => setHeroForm({ ...heroForm, linkedinUrl: e.target.value })}
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-border-subtle flex justify-end">
+                <Button type="submit" variant="primary" disabled={savingHero} className="gap-2 focus-visible:ring-2 focus-visible:ring-accent">
+                  <Save className="w-4 h-4" />
+                  <span>{savingHero ? 'กำลังบันทึก...' : 'บันทึกข้อมูลหน้าแรก'}</span>
+                </Button>
+              </div>
+            </form>
           </div>
         )}
 
