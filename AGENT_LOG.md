@@ -33,6 +33,7 @@
 | 2026-11-04 | Install webapp-testing Skill | [2026-11-04-install-webapp-testing-skill.md](file:///d:/Intren/portfolio/agent_logs/2026-11-04-install-webapp-testing-skill.md) | ติดตั้ง skill `webapp-testing` จาก anthropics/skills สำหรับทดสอบเว็บแอปและดีบัก UI ด้วย Playwright |
 | 2026-11-04 | E2E Web Application Testing | [2026-11-04-e2e-webapp-testing-playwright.md](file:///d:/Intren/portfolio/agent_logs/2026-11-04-e2e-webapp-testing-playwright.md) | รันการทดสอบ E2E อัตโนมัติด้วย Playwright: ตรวจสอบ Landing Page ครบ 7 Sections, สลับภาษา TH/EN, ฟอร์ม Login ดักจับ 401 และแท็บ Admin CRUD ผ่าน 100% |
 | 2026-11-04 | Merge Main & Vercel Production Deploy | [2026-11-04-merge-main-and-vercel-deployment.md](file:///d:/Intren/portfolio/agent_logs/2026-11-04-merge-main-and-vercel-deployment.md) | รวมโค้ดเข้า branch `main` และ Push สู่ GitHub พร้อมสร้างโปรเจกต์และ Deploy สู่ Vercel Production สำเร็จ ([https://portfolio-pannawat.vercel.app](https://portfolio-pannawat.vercel.app)) |
+| 2026-11-04 | Railway Backend Production Deploy | [2026-11-04-railway-backend-deployment.md](file:///d:/Intren/portfolio/agent_logs/2026-11-04-railway-backend-deployment.md) | สร้างโปรเจกต์และ Service บน Railway Deploy NestJS Backend จาก branch `main` พร้อม Gen Public Domain สำเร็จ และผูก `NEXT_PUBLIC_API_URL` เข้ากับ Vercel Frontend เรียบร้อย |
 
 
 
