@@ -50,7 +50,7 @@ export interface SiteContent {
 export const DEFAULT_HERO_CONTENT: HeroContent = {
   location: 'BANGKOK, TH',
   statusBadge: {
-    th: 'พร้อมรับงานวิศวกรรมซอฟต์แวร์',
+    th: 'พร้อมรับงาน',
     en: 'AVAILABLE FOR ENGINEERING ROLES',
   },
   role: {
