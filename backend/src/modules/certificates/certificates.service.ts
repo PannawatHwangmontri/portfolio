@@ -111,4 +111,36 @@ export class CertificatesService {
 
     return { success: true, message: `Certificate ${id} deleted successfully` };
   }
+
+  async uploadImage(filename: string, fileBase64: string, mimeType: string): Promise<{ url: string }> {
+    const client = this.supabaseService.getClient();
+
+    // Clean base64 header if present
+    const cleanBase64 = fileBase64.replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, '');
+    const buffer = Buffer.from(cleanBase64, 'base64');
+
+    // Generate unique filename
+    const ext = filename.split('.').pop() || 'png';
+    const uniqueName = `cert-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+
+    const { error } = await client.storage
+      .from('certificates')
+      .upload(uniqueName, buffer, {
+        contentType: mimeType || 'image/png',
+        upsert: true,
+      });
+
+    if (error) {
+      this.logger.error('Failed to upload certificate image to Supabase Storage', error);
+      throw new InternalServerErrorException(
+        `Storage upload failed: ${error.message}. กรุณาตรวจสอบว่าสร้าง Bucket ชื่อ "certificates" ใน Supabase Storage แล้ว`
+      );
+    }
+
+    const { data: publicData } = client.storage
+      .from('certificates')
+      .getPublicUrl(uniqueName);
+
+    return { url: publicData.publicUrl };
+  }
 }

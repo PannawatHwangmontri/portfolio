@@ -1,66 +1,83 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { fallbackSiteContent, getSiteContent, SkillsContent } from '@/services/profileService';
+
+const PASTEL_THEMES = [
+  {
+    wallClass: 'bg-[#e7d3bf] border-[#d8beaa] text-[#4c312b]',
+    titleClass: 'text-[#4c312b]',
+    tagClass: 'bg-white/80 text-[#4c312b] border-[#d8beaa]',
+  },
+  {
+    wallClass: 'bg-[#c5d5e8] border-[#b0c4db] text-[#1e3448]',
+    titleClass: 'text-[#1e3448]',
+    tagClass: 'bg-white/80 text-[#1e3448] border-[#b0c4db]',
+  },
+  {
+    wallClass: 'bg-[#efe5f9] border-[#ded0ed] text-[#3c2a50]',
+    titleClass: 'text-[#3c2a50]',
+    tagClass: 'bg-white/80 text-[#3c2a50] border-[#ded0ed]',
+  },
+  {
+    wallClass: 'bg-[#d4e6eb] border-[#bed7dd] text-[#0b252a]',
+    titleClass: 'text-[#0b252a]',
+    tagClass: 'bg-white/80 text-[#0b252a] border-[#bed7dd]',
+  },
+];
 
 export function SkillsSection() {
-  const { t } = useLanguage();
+  const { locale, t } = useLanguage();
+  const [skillsContent, setSkillsContent] = useState<SkillsContent>(fallbackSiteContent.skills);
 
-  const skillGroups = [
-    {
-      key: 'languages',
-      skills: ['TypeScript', 'JavaScript', 'Python', 'SQL', 'HTML5', 'CSS3'],
-    },
-    {
-      key: 'frontend',
-      skills: ['Next.js', 'React', 'Tailwind CSS', 'GSAP', 'Turbopack'],
-    },
-    {
-      key: 'backend',
-      skills: ['NestJS', 'Node.js', 'Supabase', 'PostgreSQL', 'RESTful API', 'RLS Security'],
-    },
-    {
-      key: 'devops',
-      skills: ['Docker', 'Git & GitHub', 'Railway', 'Linux', 'CI/CD', 'Postman'],
-    },
-  ];
+  useEffect(() => {
+    getSiteContent().then((content) => {
+      if (content?.skills) {
+        setSkillsContent(content.skills);
+      }
+    });
+  }, []);
 
   return (
-    <section id="skills" className="py-20 border-b border-border-subtle bg-background">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="max-w-3xl mb-12">
-          <h2 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
-            {t('skills.title')}
-          </h2>
-          <p className="mt-1 text-xs font-mono text-muted">
-            {t('skills.subtitle')}
+    <section id="skills" className="py-24 md:py-32 border-b border-[#e1dad9] bg-[#f6f5f5]">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
+        <div className="max-w-3xl mb-14">
+          <p className="text-xs font-mono text-[#737373] uppercase tracking-wider mb-3">
+            {skillsContent.subtitle[locale] || t('skills.subtitle')}
           </p>
+          <h2 className="font-serif text-3xl sm:text-5xl font-bold text-[#000000] tracking-[-0.04em] leading-[1.05]">
+            {skillsContent.title[locale] || t('skills.title')}
+          </h2>
         </div>
 
-        {/* Technical Matrix Table */}
-        <div className="border border-border-subtle divide-y divide-border-subtle rounded-lg overflow-hidden bg-surface">
-          {skillGroups.map((group) => (
-            <div
-              key={group.key}
-              className="grid grid-cols-1 md:grid-cols-12 p-5 sm:p-6 hover:bg-surface-subtle transition-colors"
-            >
-              <div className="md:col-span-4 mb-3 md:mb-0">
-                <h3 className="text-sm font-semibold text-foreground">
-                  {t(`skills.${group.key}`)}
-                </h3>
+        {/* 11x Sun-bleached Pastel Feature Cards (16px rounded-2xl) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {skillsContent.groups.map((group, idx) => {
+            const theme = PASTEL_THEMES[idx % PASTEL_THEMES.length];
+            return (
+              <div
+                key={group.id}
+                className={`p-8 sm:p-9 rounded-2xl border flex flex-col justify-between transition-all duration-200 shadow-none ${theme.wallClass}`}
+              >
+                <div>
+                  <h3 className={`font-serif text-2xl font-bold tracking-tight mb-4 ${theme.titleClass}`}>
+                    {group.name[locale] || t(`skills.${group.id}`) || group.name.en}
+                  </h3>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-6">
+                  {group.skills.map((skill) => (
+                    <span
+                      key={skill}
+                      className={`text-xs font-mono px-3 py-1.5 rounded-lg border tracking-tight shadow-none ${theme.tagClass}`}
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="md:col-span-8 flex flex-wrap gap-2">
-                {group.skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="text-xs font-mono px-2.5 py-1 rounded bg-surface-subtle text-foreground border border-border-subtle"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

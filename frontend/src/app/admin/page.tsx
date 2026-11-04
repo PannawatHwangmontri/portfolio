@@ -13,8 +13,24 @@ import {
   GitHubRepoAdminItem,
 } from '@/services/projectService';
 import { getExperiences, createExperience, deleteExperience, ExperienceItem } from '@/services/experienceService';
-import { getCertificates, createCertificate, deleteCertificate, Certificate } from '@/services/certificateService';
+import {
+  getCertificates,
+  createCertificate,
+  deleteCertificate,
+  uploadCertificateImage,
+  Certificate,
+} from '@/services/certificateService';
 import { getContactMessages, deleteContactMessage, ContactMessage } from '@/services/contactService';
+import {
+  getSiteContent,
+  updateAboutContent,
+  updateSkillsContent,
+  updateContactInfoContent,
+  AboutContent,
+  SkillsContent,
+  ContactInfoContent,
+  fallbackSiteContent,
+} from '@/services/profileService';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import {
@@ -31,10 +47,24 @@ import {
   EyeOff,
   GitFork,
   Star,
+  Upload,
+  X,
+  User,
+  Layers,
+  PhoneCall,
+  Save,
 } from 'lucide-react';
 import Link from 'next/link';
 
-type Tab = 'projects' | 'github' | 'experience' | 'certificates' | 'messages';
+type Tab =
+  | 'projects'
+  | 'github'
+  | 'experience'
+  | 'certificates'
+  | 'messages'
+  | 'about'
+  | 'skills'
+  | 'contact_info';
 
 const subscribeStorage = (callback: () => void) => {
   window.addEventListener('storage', callback);
@@ -105,6 +135,9 @@ export default function AdminDashboardPage() {
   });
 
   const [showCertModal, setShowCertModal] = useState(false);
+  const [certFile, setCertFile] = useState<File | null>(null);
+  const [certPreview, setCertPreview] = useState<string>('');
+  const [isUploadingCert, setIsUploadingCert] = useState(false);
   const [newCert, setNewCert] = useState({
     thTitle: '',
     enTitle: '',
@@ -114,27 +147,43 @@ export default function AdminDashboardPage() {
     category: 'Full-Stack',
   });
 
+  // Profile / Site Content states
+  const [aboutForm, setAboutForm] = useState<AboutContent>(fallbackSiteContent.about);
+  const [skillsForm, setSkillsForm] = useState<SkillsContent>(fallbackSiteContent.skills);
+  const [contactInfoForm, setContactInfoForm] = useState<ContactInfoContent>(fallbackSiteContent.contactInfo);
+  const [savingAbout, setSavingAbout] = useState(false);
+  const [savingSkills, setSavingSkills] = useState(false);
+  const [savingContactInfo, setSavingContactInfo] = useState(false);
+  const [newSkillTag, setNewSkillTag] = useState<Record<string, string>>({});
+
   useEffect(() => {
     const admin = getStoredAdmin();
-    if (!admin) {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+    if (!admin || !token) {
       router.push('/admin/login');
       return;
     }
 
     const fetchData = async () => {
       try {
-        const [p, exp, cert, msg, gh] = await Promise.all([
+        const [p, exp, cert, msg, gh, sc] = await Promise.all([
           getProjects(),
           getExperiences(),
           getCertificates(),
           getContactMessages().catch(() => []),
           getAdminGithubRepos().catch(() => []),
+          getSiteContent().catch(() => null),
         ]);
         setProjects(p);
         setExperiences(exp);
         setCertificates(cert);
         setMessages(msg);
         setGithubRepos(gh);
+        if (sc) {
+          if (sc.about) setAboutForm(sc.about);
+          if (sc.skills) setSkillsForm(sc.skills);
+          if (sc.contactInfo) setContactInfoForm(sc.contactInfo);
+        }
       } catch (err) {
         console.error('Failed to load admin data', err);
       }
@@ -145,6 +194,113 @@ export default function AdminDashboardPage() {
   const notify = (msg: string) => {
     setStatusMsg(msg);
     setTimeout(() => setStatusMsg(''), 3000);
+  };
+
+  const handleSaveAbout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingAbout(true);
+    try {
+      await updateAboutContent(aboutForm);
+      notify('บันทึกข้อมูล "เกี่ยวกับฉัน" เรียบร้อยแล้ว');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+      notify(`บันทึกไม่สำเร็จ: ${msg}`);
+    } finally {
+      setSavingAbout(false);
+    }
+  };
+
+  const handleSaveSkills = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSkills(true);
+    try {
+      await updateSkillsContent(skillsForm);
+      notify('บันทึกข้อมูล "ทักษะและความเชี่ยวชาญ" เรียบร้อยแล้ว');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+      notify(`บันทึกไม่สำเร็จ: ${msg}`);
+    } finally {
+      setSavingSkills(false);
+    }
+  };
+
+  const handleSaveContactInfo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingContactInfo(true);
+    try {
+      await updateContactInfoContent(contactInfoForm);
+      notify('บันทึกข้อมูล "ติดต่อฉัน" เรียบร้อยแล้ว');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+      notify(`บันทึกไม่สำเร็จ: ${msg}`);
+    } finally {
+      setSavingContactInfo(false);
+    }
+  };
+
+  const handleAddSkillGroup = () => {
+    const newId = `group-${Date.now()}`;
+    setSkillsForm((prev) => ({
+      ...prev,
+      groups: [
+        ...prev.groups,
+        {
+          id: newId,
+          name: { th: 'หมวดหมู่ใหม่', en: 'New Category' },
+          skills: [],
+        },
+      ],
+    }));
+  };
+
+  const handleRemoveSkillGroup = (groupId: string) => {
+    if (typeof window !== 'undefined' && !window.confirm('คุณต้องการลบหมวดหมู่นี้ใช่หรือไม่?')) {
+      return;
+    }
+    setSkillsForm((prev) => ({
+      ...prev,
+      groups: prev.groups.filter((g) => g.id !== groupId),
+    }));
+  };
+
+  const handleAddSkillToGroup = (groupId: string) => {
+    const tag = (newSkillTag[groupId] || '').trim();
+    if (!tag) return;
+    setSkillsForm((prev) => ({
+      ...prev,
+      groups: prev.groups.map((g) => {
+        if (g.id === groupId) {
+          if (g.skills.includes(tag)) return g;
+          return { ...g, skills: [...g.skills, tag] };
+        }
+        return g;
+      }),
+    }));
+    setNewSkillTag((prev) => ({ ...prev, [groupId]: '' }));
+  };
+
+  const handleRemoveSkillFromGroup = (groupId: string, tagToRemove: string) => {
+    setSkillsForm((prev) => ({
+      ...prev,
+      groups: prev.groups.map((g) => {
+        if (g.id === groupId) {
+          return { ...g, skills: g.skills.filter((s) => s !== tagToRemove) };
+        }
+        return g;
+      }),
+    }));
+  };
+
+  const handleGroupTitleChange = (groupId: string, lang: 'th' | 'en', val: string) => {
+    setSkillsForm((prev) => ({
+      ...prev,
+      groups: prev.groups.map((g) => {
+        if (g.id === groupId) {
+          return { ...g, name: { ...g.name, [lang]: val } };
+        }
+        return g;
+      }),
+    }));
   };
 
   const handleLogout = () => {
@@ -240,21 +396,41 @@ export default function AdminDashboardPage() {
   };
 
   // Certificate Actions
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert('ขนาดไฟล์ภาพต้องไม่เกิน 10MB');
+        return;
+      }
+      setCertFile(file);
+      const url = URL.createObjectURL(file);
+      setCertPreview(url);
+    }
+  };
+
   const handleCreateCertificate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsUploadingCert(true);
     try {
+      let finalCredentialUrl = newCert.credentialUrl;
+      if (certFile) {
+        finalCredentialUrl = await uploadCertificateImage(certFile);
+      }
       const payload: Partial<Certificate> = {
         id: `cert-${Date.now()}`,
         title: { th: newCert.thTitle, en: newCert.enTitle },
         issuer: newCert.issuer,
         issueDate: newCert.issueDate,
-        credentialUrl: newCert.credentialUrl,
+        credentialUrl: finalCredentialUrl,
         category: newCert.category,
         order: certificates.length + 1,
       };
       const created = await createCertificate(payload).catch(() => payload as Certificate);
       setCertificates([created, ...certificates]);
       setShowCertModal(false);
+      setCertFile(null);
+      setCertPreview('');
       setNewCert({
         thTitle: '',
         enTitle: '',
@@ -266,6 +442,8 @@ export default function AdminDashboardPage() {
       notify('เพิ่มใบรับรองเรียบร้อยแล้ว!');
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Error creating certificate');
+    } finally {
+      setIsUploadingCert(false);
     }
   };
 
@@ -485,6 +663,42 @@ export default function AdminDashboardPage() {
           >
             <Mail className="w-4 h-4" />
             <span>ข้อความติดต่อ ({messages.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('about')}
+            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+              activeTab === 'about'
+                ? 'bg-surface border-t-2 border-t-accent text-accent font-bold border-x border-border-subtle'
+                : 'text-muted hover:text-foreground'
+            }`}
+          >
+            <User className="w-4 h-4" />
+            <span>เกี่ยวกับฉัน (About)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('skills')}
+            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+              activeTab === 'skills'
+                ? 'bg-surface border-t-2 border-t-accent text-accent font-bold border-x border-border-subtle'
+                : 'text-muted hover:text-foreground'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>ทักษะ (Skills)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('contact_info')}
+            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+              activeTab === 'contact_info'
+                ? 'bg-surface border-t-2 border-t-accent text-accent font-bold border-x border-border-subtle'
+                : 'text-muted hover:text-foreground'
+            }`}
+          >
+            <PhoneCall className="w-4 h-4" />
+            <span>ข้อมูลติดต่อ (Contact Info)</span>
           </button>
         </div>
 
@@ -717,17 +931,47 @@ export default function AdminDashboardPage() {
             </div>
             <div className="space-y-3">
               {certificates.map((c) => (
-                <div key={c.id} className="p-4 rounded-xl border border-border-subtle bg-surface flex items-center justify-between">
-                  <div>
-                    <span className="font-bold text-foreground">{c.title.th}</span>
-                    <p className="text-xs text-muted mt-1">{c.issuer} • {c.issueDate}</p>
+                <div key={c.id} className="p-4 rounded-xl border border-border-subtle bg-surface flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {c.credentialUrl ? (
+                      <img
+                        src={c.credentialUrl}
+                        alt={c.title.th}
+                        className="w-12 h-12 object-cover rounded-md border border-border-subtle shrink-0 bg-surface-subtle"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-md border border-border-subtle bg-surface-subtle flex items-center justify-center shrink-0 text-muted">
+                        <Award className="w-6 h-6" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <span className="font-bold text-foreground truncate block">{c.title.th}</span>
+                      <p className="text-xs text-muted mt-0.5">{c.issuer} • {c.issueDate}</p>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => handleDeleteCertificate(c.id)}
-                    className="p-1.5 rounded text-rose-500 hover:bg-rose-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-accent"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {c.credentialUrl && (
+                      <a
+                        href={c.credentialUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded text-muted hover:text-accent hover:bg-surface-subtle transition-colors"
+                        title="ดูรูปภาพ/ลิงก์"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
+                    <button
+                      onClick={() => handleDeleteCertificate(c.id)}
+                      className="p-1.5 rounded text-rose-500 hover:bg-rose-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-accent"
+                      title="ลบใบรับรอง"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -775,6 +1019,472 @@ export default function AdminDashboardPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Tab 6: About Content */}
+        {activeTab === 'about' && (
+          <div className="bg-surface rounded-xl border border-border-subtle p-6 max-w-4xl shadow-none">
+            <div className="mb-6 pb-4 border-b border-border-subtle flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-foreground">แก้ไขข้อมูล &ldquo;เกี่ยวกับฉัน&rdquo; (About Me)</h2>
+                <p className="text-xs text-muted mt-1">
+                  ปรับแต่งหัวข้อ คำโปรย ข้อความแนะนำตัว และสถิติที่แสดงบนหน้าแรกของเว็บไซต์
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveAbout} className="space-y-6 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">คำนำย่อย / Subtitle (ภาษาไทย)</label>
+                  <input
+                    type="text"
+                    required
+                    value={aboutForm.subtitle.th}
+                    onChange={(e) =>
+                      setAboutForm({ ...aboutForm, subtitle: { ...aboutForm.subtitle, th: e.target.value } })
+                    }
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">Subtitle (English)</label>
+                  <input
+                    type="text"
+                    required
+                    value={aboutForm.subtitle.en}
+                    onChange={(e) =>
+                      setAboutForm({ ...aboutForm, subtitle: { ...aboutForm.subtitle, en: e.target.value } })
+                    }
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">หัวข้อหลัก / Title (ภาษาไทย)</label>
+                  <input
+                    type="text"
+                    required
+                    value={aboutForm.title.th}
+                    onChange={(e) =>
+                      setAboutForm({ ...aboutForm, title: { ...aboutForm.title, th: e.target.value } })
+                    }
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">Title (English)</label>
+                  <input
+                    type="text"
+                    required
+                    value={aboutForm.title.en}
+                    onChange={(e) =>
+                      setAboutForm({ ...aboutForm, title: { ...aboutForm.title, en: e.target.value } })
+                    }
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-semibold block mb-1.5 text-foreground">ข้อความแนะนำตัว / Bio (ภาษาไทย)</label>
+                <textarea
+                  rows={4}
+                  required
+                  value={aboutForm.bio.th}
+                  onChange={(e) =>
+                    setAboutForm({ ...aboutForm, bio: { ...aboutForm.bio, th: e.target.value } })
+                  }
+                  className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent leading-relaxed"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold block mb-1.5 text-foreground">Bio (English)</label>
+                <textarea
+                  rows={4}
+                  required
+                  value={aboutForm.bio.en}
+                  onChange={(e) =>
+                    setAboutForm({ ...aboutForm, bio: { ...aboutForm.bio, en: e.target.value } })
+                  }
+                  className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent leading-relaxed"
+                />
+              </div>
+
+              {/* Architectural Metrics Ledger Inputs */}
+              <div className="pt-4 border-t border-border-subtle">
+                <h3 className="font-bold text-foreground text-sm mb-3">สถิติผลงาน (Architectural Metrics Ledger)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Metric 1 */}
+                  <div className="p-4 rounded-xl border border-border-subtle bg-surface-subtle/40 space-y-3">
+                    <div>
+                      <label className="font-semibold block mb-1 text-foreground">ตัวเลขสถิติ 1 (เช่น 03+)</label>
+                      <input
+                        type="text"
+                        required
+                        value={aboutForm.statYears}
+                        onChange={(e) => setAboutForm({ ...aboutForm, statYears: e.target.value })}
+                        className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-semibold block mb-1 text-foreground">ป้ายกำกับ (ภาษาไทย)</label>
+                      <input
+                        type="text"
+                        required
+                        value={aboutForm.statYearsLabel.th}
+                        onChange={(e) =>
+                          setAboutForm({
+                            ...aboutForm,
+                            statYearsLabel: { ...aboutForm.statYearsLabel, th: e.target.value },
+                          })
+                        }
+                        className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-semibold block mb-1 text-foreground">Label (English)</label>
+                      <input
+                        type="text"
+                        required
+                        value={aboutForm.statYearsLabel.en}
+                        onChange={(e) =>
+                          setAboutForm({
+                            ...aboutForm,
+                            statYearsLabel: { ...aboutForm.statYearsLabel, en: e.target.value },
+                          })
+                        }
+                        className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Metric 2 */}
+                  <div className="p-4 rounded-xl border border-border-subtle bg-surface-subtle/40 space-y-3">
+                    <div>
+                      <label className="font-semibold block mb-1 text-foreground">ตัวเลขสถิติ 2 (เช่น 15+)</label>
+                      <input
+                        type="text"
+                        required
+                        value={aboutForm.statProjects}
+                        onChange={(e) => setAboutForm({ ...aboutForm, statProjects: e.target.value })}
+                        className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-semibold block mb-1 text-foreground">ป้ายกำกับ (ภาษาไทย)</label>
+                      <input
+                        type="text"
+                        required
+                        value={aboutForm.statProjectsLabel.th}
+                        onChange={(e) =>
+                          setAboutForm({
+                            ...aboutForm,
+                            statProjectsLabel: { ...aboutForm.statProjectsLabel, th: e.target.value },
+                          })
+                        }
+                        className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-semibold block mb-1 text-foreground">Label (English)</label>
+                      <input
+                        type="text"
+                        required
+                        value={aboutForm.statProjectsLabel.en}
+                        onChange={(e) =>
+                          setAboutForm({
+                            ...aboutForm,
+                            statProjectsLabel: { ...aboutForm.statProjectsLabel, en: e.target.value },
+                          })
+                        }
+                        className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-border-subtle flex justify-end">
+                <Button type="submit" variant="primary" size="md" disabled={savingAbout} className="gap-2">
+                  <Save className="w-4 h-4" />
+                  <span>{savingAbout ? 'กำลังบันทึก...' : 'บันทึกข้อมูลเกี่ยวกับฉัน'}</span>
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Tab 7: Skills Content */}
+        {activeTab === 'skills' && (
+          <div className="bg-surface rounded-xl border border-border-subtle p-6 max-w-5xl shadow-none">
+            <div className="mb-6 pb-4 border-b border-border-subtle flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-foreground">แก้ไขข้อมูล &ldquo;ทักษะและความเชี่ยวชาญ&rdquo; (Skills & Expertise)</h2>
+                <p className="text-xs text-muted mt-1">
+                  แก้ไขชื่อหมวดหมู่ และเพิ่ม/ลบแท็กเทคโนโลยีในแต่ละหมวดหมู่
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveSkills} className="space-y-6 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">หัวข้อส่วนทักษะ / Title (ภาษาไทย)</label>
+                  <input
+                    type="text"
+                    required
+                    value={skillsForm.title.th}
+                    onChange={(e) =>
+                      setSkillsForm({ ...skillsForm, title: { ...skillsForm.title, th: e.target.value } })
+                    }
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">Section Title (English)</label>
+                  <input
+                    type="text"
+                    required
+                    value={skillsForm.title.en}
+                    onChange={(e) =>
+                      setSkillsForm({ ...skillsForm, title: { ...skillsForm.title, en: e.target.value } })
+                    }
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">คำนำย่อย / Subtitle (ภาษาไทย)</label>
+                  <input
+                    type="text"
+                    required
+                    value={skillsForm.subtitle.th}
+                    onChange={(e) =>
+                      setSkillsForm({ ...skillsForm, subtitle: { ...skillsForm.subtitle, th: e.target.value } })
+                    }
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1.5 text-foreground">Subtitle (English)</label>
+                  <input
+                    type="text"
+                    required
+                    value={skillsForm.subtitle.en}
+                    onChange={(e) =>
+                      setSkillsForm({ ...skillsForm, subtitle: { ...skillsForm.subtitle, en: e.target.value } })
+                    }
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground"
+                  />
+                </div>
+              </div>
+
+              {/* Skill Categories */}
+              <div className="space-y-6 pt-4 border-t border-border-subtle">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-foreground text-sm">หมวดหมู่ทักษะ (Skill Groups)</h3>
+                    <p className="text-[11px] text-muted">สามารถเพิ่มหมวดหมู่ใหม่ หรือลบหมวดหมู่ที่ไม่ต้องการได้</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddSkillGroup}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-subtle hover:bg-surface-subtle text-foreground text-xs font-semibold cursor-pointer transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>เพิ่มหมวดหมู่ใหม่</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {skillsForm.groups.map((group) => (
+                    <div
+                      key={group.id}
+                      className="p-5 rounded-xl border border-border-subtle bg-surface-subtle/30 flex flex-col justify-between space-y-4"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-[11px] uppercase tracking-wider text-muted font-bold">
+                            หมวด: {group.id}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-muted">{group.skills.length} ทักษะ</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSkillGroup(group.id)}
+                              className="text-muted hover:text-rose-500 p-1 rounded transition-colors cursor-pointer"
+                              title="ลบหมวดหมู่นี้"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[11px] font-semibold text-muted block mb-1">ชื่อหมวด (TH)</label>
+                            <input
+                              type="text"
+                              value={group.name.th}
+                              onChange={(e) => handleGroupTitleChange(group.id, 'th', e.target.value)}
+                              className="w-full p-2 text-xs border border-border-subtle rounded-md bg-surface text-foreground"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[11px] font-semibold text-muted block mb-1">Name (EN)</label>
+                            <input
+                              type="text"
+                              value={group.name.en}
+                              onChange={(e) => handleGroupTitleChange(group.id, 'en', e.target.value)}
+                              className="w-full p-2 text-xs border border-border-subtle rounded-md bg-surface text-foreground"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Existing Skill Tags */}
+                        <div>
+                          <label className="text-[11px] font-semibold text-muted block mb-1.5">รายการทักษะปัจจุบัน</label>
+                          <div className="flex flex-wrap gap-1.5 min-h-[48px] p-2 rounded-lg border border-border-subtle bg-surface">
+                            {group.skills.length === 0 ? (
+                              <span className="text-muted text-[11px] italic p-1">ยังไม่มีทักษะในหมวดนี้</span>
+                            ) : (
+                              group.skills.map((skill) => (
+                                <span
+                                  key={skill}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-subtle text-foreground border border-border-subtle text-xs font-mono"
+                                >
+                                  <span>{skill}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveSkillFromGroup(group.id, skill)}
+                                    className="text-muted hover:text-rose-500 transition-colors"
+                                    title={`ลบ ${skill}`}
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </span>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Add new skill input */}
+                      <div className="pt-2 border-t border-border-subtle/60 flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={newSkillTag[group.id] || ''}
+                          onChange={(e) => setNewSkillTag({ ...newSkillTag, [group.id]: e.target.value })}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddSkillToGroup(group.id);
+                            }
+                          }}
+                          placeholder="พิมพ์ชื่อทักษะ เช่น Vue.js, Rust..."
+                          className="flex-1 p-2 text-xs border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleAddSkillToGroup(group.id)}
+                          className="px-3 py-2 rounded-md bg-[#000000] text-white hover:bg-[#222222] transition-colors text-xs font-semibold cursor-pointer shrink-0"
+                        >
+                          + เพิ่ม
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-border-subtle flex justify-end">
+                <Button type="submit" variant="primary" size="md" disabled={savingSkills} className="gap-2">
+                  <Save className="w-4 h-4" />
+                  <span>{savingSkills ? 'กำลังบันทึก...' : 'บันทึกข้อมูลทักษะทั้งหมด'}</span>
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Tab 8: Contact Info Content */}
+        {activeTab === 'contact_info' && (
+          <div className="bg-surface rounded-xl border border-border-subtle p-6 max-w-3xl shadow-none">
+            <div className="mb-6 pb-4 border-b border-border-subtle flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-foreground">แก้ไขข้อมูล &ldquo;ติดต่อฉัน&rdquo; (Contact Info)</h2>
+                <p className="text-xs text-muted mt-1">
+                  ปรับแก้อีเมลที่แสดงผลสำหรับการติดต่อโดยตรง และข้อความแจ้งระยะเวลาการตอบกลับ
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveContactInfo} className="space-y-6 text-xs">
+              <div>
+                <label className="font-semibold block mb-1.5 text-foreground">อีเมลสำหรับติดต่อโดยตรง (Direct Email)</label>
+                <input
+                  type="email"
+                  required
+                  value={contactInfoForm.email}
+                  onChange={(e) => setContactInfoForm({ ...contactInfoForm, email: e.target.value })}
+                  className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  placeholder="contact@example.com"
+                />
+                <p className="text-[11px] text-muted mt-1">
+                  อีเมลนี้จะแสดงในกล่องคัดลอกอีเมลบนหน้าเว็บ และใช้สำหรับปุ่มส่งอีเมล
+                </p>
+              </div>
+
+              <div>
+                <label className="font-semibold block mb-1.5 text-foreground">
+                  ข้อความแจ้งระยะเวลาการตอบกลับ (ภาษาไทย)
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={contactInfoForm.responseNote.th}
+                  onChange={(e) =>
+                    setContactInfoForm({
+                      ...contactInfoForm,
+                      responseNote: { ...contactInfoForm.responseNote, th: e.target.value },
+                    })
+                  }
+                  className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent leading-relaxed"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold block mb-1.5 text-foreground">
+                  Response Time Note (English)
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={contactInfoForm.responseNote.en}
+                  onChange={(e) =>
+                    setContactInfoForm({
+                      ...contactInfoForm,
+                      responseNote: { ...contactInfoForm.responseNote, en: e.target.value },
+                    })
+                  }
+                  className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent leading-relaxed"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-border-subtle flex justify-end">
+                <Button type="submit" variant="primary" size="md" disabled={savingContactInfo} className="gap-2">
+                  <Save className="w-4 h-4" />
+                  <span>{savingContactInfo ? 'กำลังบันทึก...' : 'บันทึกข้อมูลติดต่อ'}</span>
+                </Button>
+              </div>
+            </form>
           </div>
         )}
 
@@ -1084,23 +1794,82 @@ export default function AdminDashboardPage() {
                     />
                   </div>
                   <div>
-                    <label className="font-semibold block mb-1 text-foreground">Credential URL (ลิงก์ตรวจสอบ)</label>
+                    <label className="font-semibold block mb-1 text-foreground">หรือลิงก์รูปภาพ/URL ตรวจสอบ (ถ้ามี)</label>
                     <input
                       type="url"
                       value={newCert.credentialUrl}
                       onChange={(e) => setNewCert({ ...newCert, credentialUrl: e.target.value })}
                       className="w-full p-2 border border-border-subtle rounded-md bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
-                      placeholder="https://coursera.org/verify/..."
+                      placeholder="https://... หรืออัปโหลดไฟล์ด้านล่าง"
                     />
                   </div>
                 </div>
 
+                {/* Upload Certificate Image */}
+                <div>
+                  <label className="font-semibold block mb-1 text-foreground">
+                    อัปโหลดรูปภาพใบรับรอง (Certificate Image)
+                  </label>
+                  {certPreview ? (
+                    <div className="relative rounded-lg border border-border-subtle p-2.5 bg-surface-subtle flex items-center gap-3">
+                      <img
+                        src={certPreview}
+                        alt="Preview"
+                        className="w-20 h-16 object-cover rounded border border-border-subtle shrink-0 bg-surface"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate">{certFile?.name || 'รูปภาพเกียรติบัตร'}</p>
+                        <p className="text-[11px] text-muted">พร้อมสำหรับอัปโหลดเข้า Supabase Storage</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCertFile(null);
+                          setCertPreview('');
+                        }}
+                        className="p-1.5 rounded-full hover:bg-rose-500/10 text-rose-500 transition-colors"
+                        title="ลบรูป"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="border-2 border-dashed border-border-subtle hover:border-accent rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-colors bg-surface-subtle/40 hover:bg-surface-subtle">
+                      <Upload className="w-6 h-6 text-muted mb-1" />
+                      <span className="text-xs font-semibold text-foreground">คลิกเพื่อเลือกไฟล์รูปภาพเกียรติบัตร</span>
+                      <span className="text-[11px] text-muted mt-0.5">PNG, JPG, WebP (ขนาดสูงสุด 10MB)</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+
                 <div className="flex items-center justify-end gap-2 pt-3">
-                  <Button variant="ghost" size="sm" type="button" onClick={() => setShowCertModal(false)} className="focus-visible:ring-2 focus-visible:ring-accent">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    onClick={() => {
+                      setShowCertModal(false);
+                      setCertFile(null);
+                      setCertPreview('');
+                    }}
+                    className="focus-visible:ring-2 focus-visible:ring-accent"
+                  >
                     ยกเลิก
                   </Button>
-                  <Button variant="primary" size="sm" type="submit" className="focus-visible:ring-2 focus-visible:ring-accent">
-                    บันทึกใบรับรอง
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    type="submit"
+                    disabled={isUploadingCert}
+                    className="focus-visible:ring-2 focus-visible:ring-accent"
+                  >
+                    {isUploadingCert ? 'กำลังอัปโหลด...' : 'บันทึกใบรับรอง'}
                   </Button>
                 </div>
               </form>

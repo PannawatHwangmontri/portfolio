@@ -83,3 +83,27 @@ export async function deleteCertificate(id: string): Promise<{ success: boolean;
     return { success: true, message: `Certificate ${id} removed` };
   }
 }
+
+export async function uploadCertificateImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const fileData = reader.result as string;
+        const res = await fetchApi<{ url: string }>('/certificates/upload', {
+          method: 'POST',
+          body: JSON.stringify({
+            filename: file.name,
+            fileData,
+            contentType: file.type || 'image/png',
+          }),
+        });
+        resolve(res.url);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = (err) => reject(err);
+    reader.readAsDataURL(file);
+  });
+}

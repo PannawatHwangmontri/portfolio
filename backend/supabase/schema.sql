@@ -98,4 +98,32 @@ CREATE POLICY "Admin Full Access Contacts" ON public.contacts FOR ALL TO authent
 DROP POLICY IF EXISTS "Admin Full Access GitHub Repos" ON public.github_repos;
 CREATE POLICY "Admin Full Access GitHub Repos" ON public.github_repos FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+-- 10. Supabase Storage for Certificate Images
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('certificates', 'certificates', true)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "Public Read Certificate Images" ON storage.objects;
+CREATE POLICY "Public Read Certificate Images" ON storage.objects
+  FOR SELECT USING (bucket_id = 'certificates');
+
+DROP POLICY IF EXISTS "Admin Full Access Certificate Images" ON storage.objects;
+CREATE POLICY "Admin Full Access Certificate Images" ON storage.objects
+  FOR ALL TO authenticated USING (bucket_id = 'certificates') WITH CHECK (bucket_id = 'certificates');
+
+-- 11. Site Content Table (About, Skills, Contact Info)
+CREATE TABLE IF NOT EXISTS public.site_content (
+  key TEXT PRIMARY KEY,
+  data JSONB NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.site_content ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public Read Site Content" ON public.site_content;
+CREATE POLICY "Public Read Site Content" ON public.site_content FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Admin Full Access Site Content" ON public.site_content;
+CREATE POLICY "Admin Full Access Site Content" ON public.site_content FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
 

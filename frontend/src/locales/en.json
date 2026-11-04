@@ -5,7 +5,6 @@
     "projects": "Projects",
     "experience": "Experience",
     "certificates": "Certificates",
-    "activities": "Activities",
     "contact": "Contact",
     "resume": "Download Resume",
     "admin": "Dashboard"
@@ -23,8 +22,7 @@
     "subtitle": "My journey and passion in software engineering",
     "bio": "I am a software engineer dedicated to building scalable solutions, writing clean maintainable code, and continuously exploring modern technologies. I focus on both robust backend architectures and highly intuitive frontends.",
     "statYears": "Years of Coding",
-    "statProjects": "Projects Built",
-    "statHackathons": "Hackathons & Events"
+    "statProjects": "Projects Built"
   },
   "skills": {
     "title": "Skills & Expertise",
@@ -55,10 +53,6 @@
     "title": "Certificates & Awards",
     "subtitle": "Verified credentials and recognized achievements",
     "viewCredential": "Verify Credential"
-  },
-  "activities": {
-    "title": "Activities & Hackathons",
-    "subtitle": "Competitions, hackathons, and tech community involvement"
   },
   "contact": {
     "title": "Get in Touch",

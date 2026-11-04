@@ -6,6 +6,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
 import { CertificatesModule } from './modules/certificates/certificates.module.js';
 import { ContactModule } from './modules/contact/contact.module.js';
 import { ExperienceModule } from './modules/experience/experience.module.js';
+import { ProfileModule } from './modules/profile/profile.module.js';
 import { ProjectsModule } from './modules/projects/projects.module.js';
 import { SupabaseModule } from './supabase/supabase.module.js';
 
@@ -21,6 +22,7 @@ import { SupabaseModule } from './supabase/supabase.module.js';
     ExperienceModule,
     CertificatesModule,
     ContactModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [AppService],

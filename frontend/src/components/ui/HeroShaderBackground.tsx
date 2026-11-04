@@ -14,8 +14,8 @@ precision highp float;
 uniform vec2 iResolution;
 uniform float iTime;
 
-vec3 bgColor = vec3(0.01, 0.16, 0.42);
-vec3 rectColor = vec3(0.01, 0.26, 0.57);
+vec3 bgColor = vec3(0.043, 0.145, 0.165);
+vec3 rectColor = vec3(0.78, 0.48, 0.30);
 
 //noise background
 const float noiseIntensity = 2.8;

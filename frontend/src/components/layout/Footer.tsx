@@ -9,38 +9,38 @@ export function Footer() {
   const { t } = useLanguage();
 
   return (
-    <footer className="border-t border-border-subtle bg-surface-subtle py-10">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted">
+    <footer className="border-t border-[#143e46] bg-[#081d21] py-12 text-[#afaeae]">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-5 text-xs">
         <div>
-          <p className="font-medium text-foreground">© 2026 Pannawat Hwangmontri</p>
-          <p className="mt-1 font-mono text-[11px] text-muted">{t('footer.builtWith')}</p>
+          <p className="font-serif text-sm font-bold text-white tracking-tight">© 2026 Pannawat Hwangmontri</p>
+          <p className="mt-1.5 font-mono text-[11px] text-[#afaeae]">{t('footer.builtWith')}</p>
         </div>
 
-        <div className="flex items-center gap-5 text-muted">
+        <div className="flex items-center gap-6 text-[#afaeae]">
           <a
             href="https://github.com/PannawatHwangmontri"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-foreground transition-colors"
+            className="hover:text-white transition-colors"
             aria-label="GitHub"
           >
-            <Github size={15} />
+            <Github size={16} />
           </a>
           <a
             href="https://linkedin.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-foreground transition-colors"
+            className="hover:text-white transition-colors"
             aria-label="LinkedIn"
           >
-            <Linkedin size={15} />
+            <Linkedin size={16} />
           </a>
           <a
             href="mailto:contact@pannawat.dev"
-            className="hover:text-foreground transition-colors"
+            className="hover:text-white transition-colors"
             aria-label="Email"
           >
-            <Mail size={15} />
+            <Mail size={16} />
           </a>
         </div>
       </div>

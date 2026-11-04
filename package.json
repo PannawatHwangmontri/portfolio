@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "dev": "turbo dev",
+    "clean:ports": "npx --yes kill-port 3000 4000",
     "build": "turbo build",
     "lint": "turbo lint",
     "check-types": "turbo check-types",

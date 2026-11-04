@@ -1,15 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Lock, Mail, ShieldAlert, ArrowLeft } from 'lucide-react';
 import { loginAdmin } from '@/services/authService';
 import Link from 'next/link';
 
-export default function AdminLoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isExpired = searchParams?.get('expired') === '1';
+
   const [email, setEmail] = useState('admin@pannawat.dev');
   const [password, setPassword] = useState('admin1234');
   const [loading, setLoading] = useState(false);
@@ -31,31 +34,37 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 bg-background">
-      <div className="w-full max-w-md">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Portfolio / กลับหน้าหลัก</span>
-        </Link>
+    <div className="w-full max-w-md">
+      <Link
+        href="/"
+        className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-foreground mb-6 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span>Back to Portfolio / กลับหน้าหลัก</span>
+      </Link>
 
-        <Card className="p-8 border border-border-subtle bg-surface shadow-none">
-          <div className="text-center mb-6">
-            <div className="w-12 h-12 rounded-xl bg-accent-subtle border border-accent/20 text-accent flex items-center justify-center mx-auto mb-3">
-              <Lock className="w-6 h-6" />
-            </div>
-            <h1 className="text-xl font-bold text-foreground">Admin Dashboard Login</h1>
-            <p className="text-xs text-muted mt-1">ระบบจัดการข้อมูลพอร์ตโฟลิโอและกล่องข้อความ</p>
+      <Card className="p-8 border border-border-subtle bg-surface shadow-none">
+        <div className="text-center mb-6">
+          <div className="w-12 h-12 rounded-xl bg-accent-subtle border border-accent/20 text-accent flex items-center justify-center mx-auto mb-3">
+            <Lock className="w-6 h-6" />
           </div>
+          <h1 className="text-xl font-bold text-foreground">Admin Dashboard Login</h1>
+          <p className="text-xs text-muted mt-1">ระบบจัดการข้อมูลพอร์ตโฟลิโอและกล่องข้อความ</p>
+        </div>
 
-          {errorMsg && (
-            <div className="p-3 mb-4 rounded-lg bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-xs text-rose-600 flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
+        {isExpired && !errorMsg && (
+          <div className="p-3 mb-4 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 shrink-0" />
+            <span>เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง</span>
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="p-3 mb-4 rounded-lg bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-xs text-rose-600 flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
@@ -109,6 +118,15 @@ export default function AdminLoginPage() {
           </div>
         </Card>
       </div>
+    );
+  }
+
+export default function AdminLoginPage() {
+  return (
+    <div className="min-h-screen flex flex-col justify-center items-center px-4 bg-background">
+      <Suspense fallback={null}>
+        <LoginForm />
+      </Suspense>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { IBM_Plex_Sans_Thai, IBM_Plex_Sans } from 'next/font/google';
+import { IBM_Plex_Sans_Thai, IBM_Plex_Sans, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { Navbar } from '@/components/layout/Navbar';
@@ -19,6 +19,13 @@ const ibmPlexSans = IBM_Plex_Sans({
   display: 'swap',
 });
 
+const playfairDisplay = Playfair_Display({
+  weight: ['400', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-playfair',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   title: 'Pannawat Hwangmontri | Full-Stack Developer Portfolio',
   description:
@@ -33,9 +40,9 @@ export default function RootLayout({
   return (
     <html
       lang="th"
-      className={`${ibmPlexSansThai.variable} ${ibmPlexSans.variable} scroll-smooth`}
+      className={`${ibmPlexSansThai.variable} ${ibmPlexSans.variable} ${playfairDisplay.variable} scroll-smooth`}
     >
-      <body className="min-h-screen flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-sky-100 selection:text-sky-900">
+      <body className="min-h-screen flex flex-col bg-white text-[#000000] font-sans selection:bg-[#406e7a]/25 selection:text-[#0b252a]">
         <LanguageProvider>
           <Navbar />
           <main className="flex-1">{children}</main>

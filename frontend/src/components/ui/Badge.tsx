@@ -2,25 +2,47 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: 'sky' | 'neutral';
+  variant?:
+    | 'neutral'
+    | 'slate-teal'
+    | 'dusty-sky'
+    | 'mist-mint'
+    | 'wisteria'
+    | 'desert-clay'
+    | 'sky'
+    | 'teal'
+    | 'violet'
+    | 'peach'
+    | 'mint'
+    | 'lavender';
   children: React.ReactNode;
 }
 
 export function Badge({
   className,
-  variant = 'sky',
+  variant = 'neutral',
   children,
   ...props
 }: BadgeProps) {
   const variants = {
-    sky: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800',
-    neutral: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+    'slate-teal': 'bg-[#406e7a] text-white border-transparent',
+    'dusty-sky': 'bg-[#c5d5e8] text-[#000000] border-[#b0c4db]',
+    'mist-mint': 'bg-[#d4e6eb] text-[#0b252a] border-[#bed7dd]',
+    'wisteria': 'bg-[#efe5f9] text-[#000000] border-[#ded0ed]',
+    'desert-clay': 'bg-[#e7d3bf] text-[#4c312b] border-[#d8beaa]',
+    neutral: 'bg-[#f6f5f5] text-[#000000] border-[#e1dad9]',
+    sky: 'bg-[#c5d5e8] text-[#000000] border-[#b0c4db]',
+    teal: 'bg-[#406e7a] text-white border-transparent',
+    violet: 'bg-[#efe5f9] text-[#000000] border-[#ded0ed]',
+    peach: 'bg-[#e7d3bf] text-[#4c312b] border-[#d8beaa]',
+    mint: 'bg-[#d4e6eb] text-[#0b252a] border-[#bed7dd]',
+    lavender: 'bg-[#efe5f9] text-[#000000] border-[#ded0ed]',
   };
 
   return (
     <span
       className={cn(
-        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border font-mono',
+        'inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium border font-mono tracking-tight shadow-none',
         variants[variant],
         className
       )}

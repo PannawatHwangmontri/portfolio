@@ -21,6 +21,18 @@ export class CertificatesController {
     return this.certificatesService.findAll();
   }
 
+  @Post('upload')
+  @UseGuards(AuthGuard)
+  async upload(
+    @Body() body: { filename: string; fileData: string; contentType?: string },
+  ): Promise<{ url: string }> {
+    return this.certificatesService.uploadImage(
+      body.filename,
+      body.fileData,
+      body.contentType || 'image/png',
+    );
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Certificate> {
     return this.certificatesService.findOne(id);

@@ -27,53 +27,57 @@ export function HeroSection() {
 
   return (
     <section
+      id="hero"
       ref={heroRef}
-      className="relative pt-20 pb-20 md:pt-28 md:pb-28 border-b border-slate-800 bg-slate-950 overflow-hidden text-white"
+      className="relative pt-24 pb-20 md:pt-36 md:pb-32 border-b border-[#143e46] bg-[#0b252a] overflow-hidden text-white"
     >
-      {/* GLSL WebGL Background */}
+      {/* GLSL WebGL Background (Warm Sunset Embers over Deep Teal) */}
       <HeroShaderBackground />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="max-w-3xl">
-          {/* Subtle Location & Status Ledger */}
-          <div className="hero-reveal text-xs font-mono text-slate-400 mb-4 flex items-center gap-2">
-            <span>Bangkok, Thailand</span>
-            <span className="text-slate-600">/</span>
-            <span className="text-sky-400 font-medium">Available for Full-Stack & Engineering Roles</span>
+      <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6">
+        <div className="max-w-4xl">
+          {/* Status Ledger */}
+          <div className="hero-reveal text-xs font-mono text-[#afaeae] mb-6 flex flex-wrap items-center gap-2.5 tracking-wider">
+            <span className="text-white/90">BANGKOK, TH</span>
+            <span className="text-[#406e7a]">/</span>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-[#406e7a]/40 text-[#d4e6eb] border border-[#406e7a]/60 text-[11px] font-mono">
+              AVAILABLE FOR ENGINEERING ROLES
+            </span>
           </div>
 
-          {/* Unified Architectural Headline */}
-          <h1 className="hero-reveal text-3xl sm:text-4xl md:text-5xl font-semibold text-white tracking-tight leading-[1.15]">
+          {/* Monumental 11x Serif Headline (74-100px with -0.04em tracking) */}
+          <h1 className="hero-reveal font-serif text-5xl sm:text-7xl lg:text-[88px] font-bold text-white tracking-[-0.04em] leading-[0.96]">
             {t('hero.role')}
           </h1>
 
-          <p className="hero-reveal mt-2.5 text-lg font-normal text-slate-200">
+          {/* Editorial Name Subheading */}
+          <p className="hero-reveal mt-5 font-serif text-2xl sm:text-3xl font-medium text-white/85 tracking-[-0.02em] leading-snug">
             {t('hero.name')}
           </p>
 
-          <p className="hero-reveal mt-4 text-base text-slate-300 leading-relaxed max-w-2xl font-light">
+          <p className="hero-reveal mt-6 text-base sm:text-lg text-[#afaeae] leading-relaxed max-w-2xl font-light">
             {t('hero.description')}
           </p>
 
-          {/* Action Row */}
-          <div className="hero-reveal mt-8 flex flex-wrap items-center gap-4">
+          {/* 11x Pill Button Action Row: White primary pill + adjacent ghost link */}
+          <div className="hero-reveal mt-10 flex flex-wrap items-center gap-5">
             <a
               href="#projects"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-sky-500 text-slate-950 text-xs font-semibold hover:bg-sky-400 transition-colors shadow-lg shadow-sky-500/20"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white text-[#000000] text-sm font-semibold hover:bg-[#f6f5f5] active:bg-[#ede2d7] transition-colors shadow-none"
             >
               <span>{t('hero.viewProjects')}</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
+              <ArrowUpRight className="w-4 h-4" />
             </a>
 
             <a
               href="#contact"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md border border-white/20 text-white text-xs font-medium hover:bg-white/10 hover:border-white/40 transition-colors backdrop-blur-xs"
+              className="inline-flex items-center gap-1.5 px-4 py-3.5 text-sm font-medium text-[#d4e6eb] hover:text-white transition-colors"
             >
-              <span>{t('hero.contactMe')}</span>
+              <span>{t('hero.contactMe')} &rarr;</span>
             </a>
 
             {/* Social channels as understated text-links */}
-            <div className="flex items-center gap-4 ml-2 sm:ml-4 text-xs text-slate-400">
+            <div className="flex items-center gap-5 sm:ml-4 text-xs text-[#afaeae]">
               <a
                 href="https://github.com/PannawatHwangmontri"
                 target="_blank"

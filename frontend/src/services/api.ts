@@ -28,7 +28,19 @@ export async function fetchApi<T>(
 
     if (!res.ok) {
       const errorBody = await res.json().catch(() => ({}));
-      throw new Error(errorBody.message || `API error: ${res.statusText}`);
+      const message = errorBody.message || `API error: ${res.statusText}`;
+
+      if (res.status === 401 && typeof window !== 'undefined') {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        window.dispatchEvent(new Event('storage'));
+        if (window.location.pathname.startsWith('/admin') && window.location.pathname !== '/admin/login') {
+          // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+          window.location.href = '/admin/login?expired=1';
+        }
+      }
+
+      throw new Error(message);
     }
 
     return await res.json();
