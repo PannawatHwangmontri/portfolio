@@ -9,46 +9,30 @@ export interface ContactMessage {
   read?: boolean;
 }
 
-export const fallbackMessages: ContactMessage[] = [
-  {
-    id: 'msg-sample-1',
-    name: 'Tech Recruiter',
-    email: 'recruiter@techfirm.example',
-    message: 'สวัสดีครับ สนใจผลงานและโปรไฟล์ของคุณ อยากสอบถามความสนใจในตำแหน่ง Full-Stack Engineer ครับ',
-    createdAt: new Date().toISOString(),
-    read: false,
-  },
-];
+export const fallbackMessages: ContactMessage[] = [];
 
 export async function submitContact(data: {
   name: string;
   email: string;
   message: string;
 }): Promise<{ success: boolean; message: string }> {
-  try {
-    return await fetchApi<{ success: boolean; message: string }>('/contact', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  } catch {
-    return { success: true, message: 'Message sent successfully (offline mode)' };
-  }
+  return fetchApi<{ success: boolean; message: string }>('/contact', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 }
 
 export async function getContactMessages(): Promise<ContactMessage[]> {
   try {
-    return await fetchApi<ContactMessage[]>('/contact');
+    const data = await fetchApi<ContactMessage[]>('/contact');
+    return Array.isArray(data) ? data : [];
   } catch {
-    return fallbackMessages;
+    return [];
   }
 }
 
 export async function deleteContactMessage(id: string): Promise<{ success: boolean; message: string }> {
-  try {
-    return await fetchApi<{ success: boolean; message: string }>(`/contact/${id}`, {
-      method: 'DELETE',
-    });
-  } catch {
-    return { success: true, message: `Message ${id} removed` };
-  }
+  return fetchApi<{ success: boolean; message: string }>(`/contact/${id}`, {
+    method: 'DELETE',
+  });
 }

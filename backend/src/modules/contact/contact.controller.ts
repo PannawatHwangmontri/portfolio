@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { ContactMessage } from './contact.data.js';
 import { ContactService } from './contact.service.js';
@@ -14,13 +14,13 @@ export class ContactController {
 
   @Get()
   @UseGuards(AuthGuard)
-  async findAll(): Promise<ContactMessage[]> {
-    return this.contactService.findAll();
+  async findAll(@Req() req: any): Promise<ContactMessage[]> {
+    return this.contactService.findAll(req.token);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard)
-  async delete(@Param('id') id: string) {
-    return this.contactService.delete(id);
+  async delete(@Param('id') id: string, @Req() req: any) {
+    return this.contactService.delete(id, req.token);
   }
 }

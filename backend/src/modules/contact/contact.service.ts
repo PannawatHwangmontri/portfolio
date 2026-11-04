@@ -23,13 +23,13 @@ export class ContactService {
     const { name, email, message } = payload;
 
     if (!name || name.trim().length === 0) {
-      throw new BadRequestException('Name is required');
+      throw new BadRequestException('กรุณากรอกชื่อของคุณ');
     }
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      throw new BadRequestException('Valid email is required');
+      throw new BadRequestException('กรุณากรอกอีเมลให้ถูกต้อง');
     }
-    if (!message || message.trim().length < 5) {
-      throw new BadRequestException('Message must be at least 5 characters');
+    if (!message || message.trim().length === 0) {
+      throw new BadRequestException('กรุณากรอกข้อความ');
     }
 
     const client = this.supabaseService.getClient();
@@ -52,8 +52,8 @@ export class ContactService {
     return { success: true, message: 'Message sent successfully' };
   }
 
-  async findAll(): Promise<ContactMessage[]> {
-    const client = this.supabaseService.getClient();
+  async findAll(token?: string): Promise<ContactMessage[]> {
+    const client = this.supabaseService.getClient(token);
     const { data, error } = await client.from('contacts').select('*').order('created_at', { ascending: false });
 
     if (error) {
@@ -64,8 +64,8 @@ export class ContactService {
     return (data || []).map(mapContactFromDb);
   }
 
-  async delete(id: string): Promise<{ success: boolean; message: string }> {
-    const client = this.supabaseService.getClient();
+  async delete(id: string, token?: string): Promise<{ success: boolean; message: string }> {
+    const client = this.supabaseService.getClient(token);
     const { error } = await client.from('contacts').delete().eq('id', id);
 
     if (error) {
@@ -73,6 +73,6 @@ export class ContactService {
       throw new InternalServerErrorException(error.message);
     }
 
-    return { success: true, message: `Message ${id} deleted` };
+    return { success: true, message: `Message ${id} deleted successfully` };
   }
 }

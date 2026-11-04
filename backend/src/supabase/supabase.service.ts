@@ -6,17 +6,27 @@ export class SupabaseService {
   private readonly logger = new Logger(SupabaseService.name);
   private client: SupabaseClient | null = null;
 
-  getClient(): SupabaseClient {
+  getClient(token?: string): SupabaseClient {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+
+    if (!url || !key) {
+      throw new InternalServerErrorException(
+        'Supabase credentials (SUPABASE_URL, SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY) are not configured'
+      );
+    }
+
+    if (token) {
+      return createClient(url, key, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      });
+    }
+
     if (!this.client) {
-      const url = process.env.SUPABASE_URL;
-      const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
-
-      if (!url || !key) {
-        throw new InternalServerErrorException(
-          'Supabase credentials (SUPABASE_URL, SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY) are not configured'
-        );
-      }
-
       this.client = createClient(url, key);
       this.logger.log('Supabase client initialized successfully');
     }
