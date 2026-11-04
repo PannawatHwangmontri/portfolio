@@ -140,6 +140,12 @@ export default function AdminDashboardPage() {
   });
 
   const [showCertModal, setShowCertModal] = useState(false);
+  const [showSkillGroupModal, setShowSkillGroupModal] = useState(false);
+  const [newGroupForm, setNewGroupForm] = useState({
+    thName: '',
+    enName: '',
+    skills: '',
+  });
   const [certFile, setCertFile] = useState<File | null>(null);
   const [certPreview, setCertPreview] = useState<string>('');
   const [isUploadingCert, setIsUploadingCert] = useState(false);
@@ -260,19 +266,46 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleAddSkillGroup = () => {
+  const handleCreateSkillGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newGroupForm.thName.trim() && !newGroupForm.enName.trim()) {
+      alert('กรุณากรอกชื่อหมวดหมู่');
+      return;
+    }
+
     const newId = `group-${Date.now()}`;
-    setSkillsForm((prev) => ({
-      ...prev,
-      groups: [
-        ...prev.groups,
-        {
-          id: newId,
-          name: { th: 'หมวดหมู่ใหม่', en: 'New Category' },
-          skills: [],
+    const skillsList = newGroupForm.skills
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
+    const updatedGroups = [
+      ...skillsForm.groups,
+      {
+        id: newId,
+        name: {
+          th: newGroupForm.thName.trim() || newGroupForm.enName.trim(),
+          en: newGroupForm.enName.trim() || newGroupForm.thName.trim(),
         },
-      ],
-    }));
+        skills: skillsList,
+      },
+    ];
+
+    const updatedSkillsForm = {
+      ...skillsForm,
+      groups: updatedGroups,
+    };
+
+    setSkillsForm(updatedSkillsForm);
+    setShowSkillGroupModal(false);
+    setNewGroupForm({ thName: '', enName: '', skills: '' });
+
+    try {
+      await updateSkillsContent(updatedSkillsForm);
+      notify('เพิ่มหมวดหมู่ใหม่และบันทึกข้อมูลเรียบร้อยแล้ว!');
+    } catch {
+      notify('เพิ่มหมวดหมู่ใหม่ในฟอร์มแล้ว (อย่าลืมกดบันทึกข้อมูลด้านล่าง)');
+    }
   };
 
   const handleRemoveSkillGroup = (groupId: string) => {
@@ -1491,7 +1524,7 @@ export default function AdminDashboardPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={handleAddSkillGroup}
+                    onClick={() => setShowSkillGroupModal(true)}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-subtle hover:bg-surface-subtle text-foreground text-xs font-semibold cursor-pointer transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -2066,6 +2099,92 @@ export default function AdminDashboardPage() {
                     className="focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     {isUploadingCert ? 'กำลังอัปโหลด...' : 'บันทึกใบรับรอง'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Skill Group Create Modal */}
+        {showSkillGroupModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+            <div className="w-full max-w-lg p-6 bg-surface border border-border-subtle rounded-xl shadow-xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-bold text-foreground">
+                  เพิ่มหมวดหมู่ทักษะใหม่ (Add Skill Category)
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowSkillGroupModal(false)}
+                  className="text-muted hover:text-foreground p-1 rounded-lg cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <form onSubmit={handleCreateSkillGroup} className="space-y-4 text-xs">
+                <div>
+                  <label className="font-semibold block mb-1 text-foreground">
+                    ชื่อหมวดหมู่ (ภาษาไทย)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newGroupForm.thName}
+                    onChange={(e) => setNewGroupForm({ ...newGroupForm, thName: e.target.value })}
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                    placeholder="เช่น เครื่องมือและ AI, Cloud & Platform"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold block mb-1 text-foreground">
+                    Category Name (English)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newGroupForm.enName}
+                    onChange={(e) => setNewGroupForm({ ...newGroupForm, enName: e.target.value })}
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                    placeholder="e.g. Tools & AI, Cloud & Platform"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold block mb-1 text-foreground">
+                    ทักษะเริ่มต้น (คั่นด้วยเครื่องหมายจุลภาค ,)
+                  </label>
+                  <input
+                    type="text"
+                    value={newGroupForm.skills}
+                    onChange={(e) => setNewGroupForm({ ...newGroupForm, skills: e.target.value })}
+                    className="w-full p-2.5 border border-border-subtle rounded-lg bg-surface text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent font-mono"
+                    placeholder="เช่น ChatGPT, Copilot, Cursor, Postman"
+                  />
+                  <p className="text-[11px] text-muted mt-1">
+                    สามารถใส่ทักษะเริ่มต้นได้ทันที หรือค่อยไปกดเพิ่มแท็กทีละตัวในหน้าหลักก็ได้
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-border-subtle flex justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    onClick={() => setShowSkillGroupModal(false)}
+                    className="focus-visible:ring-2 focus-visible:ring-accent"
+                  >
+                    ยกเลิก
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    type="submit"
+                    className="gap-1.5 focus-visible:ring-2 focus-visible:ring-accent"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>เพิ่มหมวดหมู่</span>
                   </Button>
                 </div>
               </form>
