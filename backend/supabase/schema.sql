@@ -126,4 +126,30 @@ CREATE POLICY "Public Read Site Content" ON public.site_content FOR SELECT USING
 DROP POLICY IF EXISTS "Admin Full Access Site Content" ON public.site_content;
 CREATE POLICY "Admin Full Access Site Content" ON public.site_content FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+-- 12. Resumes (upload history; one active at a time) + Storage bucket
+CREATE TABLE IF NOT EXISTS public.resumes (
+  id TEXT PRIMARY KEY,
+  filename TEXT NOT NULL,
+  path TEXT NOT NULL,
+  url TEXT NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.resumes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public Read Resumes" ON public.resumes;
+CREATE POLICY "Public Read Resumes" ON public.resumes FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Admin Full Access Resumes" ON public.resumes;
+CREATE POLICY "Admin Full Access Resumes" ON public.resumes FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('resumes', 'resumes', true)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "Public Read Resume Files" ON storage.objects;
+CREATE POLICY "Public Read Resume Files" ON storage.objects
+  FOR SELECT USING (bucket_id = 'resumes');
+
 
