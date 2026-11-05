@@ -48,3 +48,4 @@
 ## กฎการบันทึก
 1. ทุกครั้งที่มีการตัดสินใจสำคัญ หรือเสร็จสิ้นรอบการพัฒนา ให้สร้างไฟล์ใหม่ในโฟลเดอร์ `agent_logs/YYYY-MM-DD-<topic>.md`
 2. อัปเดตตารางสารบัญในหน้านี้เสมอ
+| 2026-11-05 | Google Admin Login | [2026-11-05-google-admin-login.md](file:///d:/Intren/portfolio/agent_logs/2026-11-05-google-admin-login.md) | เพิ่มล็อกอิน Google ให้แอดมิน ผ่าน Supabase OAuth + allowlist `ADMIN_EMAILS` |

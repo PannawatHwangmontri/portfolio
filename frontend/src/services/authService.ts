@@ -20,6 +20,27 @@ export async function loginAdmin(email: string, password: string): Promise<{ use
   return res;
 }
 
+export function startGoogleLogin() {
+  const redirectTo = `${window.location.origin}/admin/auth/callback`;
+  window.location.href =
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/authorize?provider=google` +
+    `&redirect_to=${encodeURIComponent(redirectTo)}`;
+}
+
+// Called on the OAuth callback with the Supabase access token; backend checks admin allowlist.
+export async function completeGoogleLogin(token: string): Promise<AdminUser> {
+  localStorage.setItem('admin_token', token);
+  try {
+    const user = await fetchApi<AdminUser>('/auth/me');
+    localStorage.setItem('admin_user', JSON.stringify(user));
+    window.dispatchEvent(new Event('storage'));
+    return user;
+  } catch (err) {
+    localStorage.removeItem('admin_token');
+    throw err;
+  }
+}
+
 export function logoutAdmin() {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('admin_token');
