@@ -21,6 +21,10 @@
 2. **เวลาให้ทำอะไรให้ถามก่อนทำ ห้ามคิดเอง (Ask Before Doing, Never Assume)**:
    - ทุกครั้งที่ผู้ใช้มอบหมายงาน ไม่ว่าจะเป็นการเพิ่มฟีเจอร์ แก้ไขโค้ด หรือปรับปรุงการตั้งค่าใดๆ ให้สอบถามรายละเอียดและยืนยันแนวทางกับผู้ใช้ก่อนเริ่มลงมือทำเสมอ ห้ามคิดหรือเดาเอาเองเด็ดขาด
 
+3. **การซิงก์คู่ขนาน (Dual Context Sync Rule)**:
+   - หากมีการเปลี่ยนแปลงหรือแก้ไขเนื้อหาใน `GEMINI.md` หรือ `CLAUDE.md` ให้ทำการอัปเดตและเปลี่ยนแปลงทั้ง 2 ไฟล์นี้ให้สอดคล้องกันเสมอในบริบทของแต่ละ AI (ฝั่ง Gemini ปรับตามบริบท Antigravity/Gemini, ฝั่ง Claude ปรับตามบริบท Claude Code)
+
+
 ## 3. การจัดระเบียบโครงสร้างโค้ด (Clean Architecture Rules)
 
 - **Frontend (`frontend/`)**: ใช้ Next.js App Router แยกชัดเจนระหว่าง UI Components (Dumb components) และ Logic/Data Fetching (Smart components/containers)

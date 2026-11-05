@@ -1,3 +1,5 @@
+@AGENT.md
+
 # CLAUDE.md
 
 คู่มือบริบทและแนวทางปฏิบัติสำหรับ Claude Code และ Anthropic AI Agents ในโปรเจกต์ Portfolio นี้
@@ -84,3 +86,4 @@ portfolio/
    - ห้าม Commit ตรงเข้า `main` ให้ทำงานบน Branch `feature/init-portfolio` ก่อนเสมอ
    - ตรวจสอบ `git diff` และรัน Build ให้ผ่าน 100% ก่อน Commit
    - เมสเสจ Commit ต้องระบุเหตุผลชัดเจน เช่น `feat:`, `fix:`, `chore:`
+7. **การซิงก์คู่ขนานกับ GEMINI.md (Dual Context Sync Rule)**: หากมีการเปลี่ยนแปลงหรือแก้ไขเนื้อหาใน `GEMINI.md` หรือ `CLAUDE.md` ให้ทำการอัปเดตและเปลี่ยนแปลงทั้ง 2 ไฟล์นี้ให้สอดคล้องกันเสมอในบริบทของแต่ละ AI (ฝั่ง Gemini ปรับตามบริบท Antigravity/Gemini, ฝั่ง Claude ปรับตามบริบท Claude Code)

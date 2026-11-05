@@ -42,6 +42,7 @@ portfolio/
 │   └── test/
 ├── AGENT_LOG.md                  # บันทึกประวัติการตัดสินใจและการคุยกับ Agent
 ├── GEMINI.md
+├── CLAUDE.md
 ├── AGENT.md
 ├── SKILL.md
 ├── DESIGN.md
@@ -54,3 +55,4 @@ portfolio/
 3. **i18n First**: ทุกข้อความบนหน้าเว็บต้องมีทั้งภาษาไทยและอังกฤษ ห้ามฮาร์ดโค้ด
 4. **ทำความสะอาด GSAP**: ใช้ Context / Cleanup เพื่อป้องกัน Memory Leak บน Frontend เสมอ
 5. **ความปลอดภัยสูง**: ห้ามแตะต้อง `.env*` หรือคีย์ Supabase Service Role ในฝั่ง Client
+6. **การซิงก์คู่ขนานกับ CLAUDE.md (Dual Context Sync Rule)**: หากมีการเปลี่ยนแปลงหรือแก้ไขเนื้อหาใน `GEMINI.md` หรือ `CLAUDE.md` ให้ทำการอัปเดตและเปลี่ยนแปลงทั้ง 2 ไฟล์นี้ให้สอดคล้องกันเสมอในบริบทของแต่ละ AI (ฝั่ง Gemini ปรับตามบริบท Antigravity/Gemini, ฝั่ง Claude ปรับตามบริบท Claude Code)
