@@ -1,12 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { getActiveResume, Resume } from '@/services/resumeService';
 import { Shield } from 'lucide-react';
 import Link from 'next/link';
 
 export function Navbar() {
   const { locale, toggleLocale, t } = useLanguage();
+  const [resume, setResume] = useState<Resume | null>(null);
+
+  useEffect(() => {
+    getActiveResume().then(setResume);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-[#e1dad9]">
@@ -60,14 +66,16 @@ export function Navbar() {
           </button>
 
           {/* Resume Pill Button */}
-          <a
-            href={locale === 'th' ? '/resume-th.pdf' : '/resume-en.pdf'}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden sm:inline-flex text-xs font-medium px-5 py-2 rounded-full bg-[#000000] text-white hover:bg-[#222222] transition-colors tracking-normal shadow-none"
-          >
-            {t('nav.resume')}
-          </a>
+          {resume && (
+            <a
+              href={resume.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex text-xs font-medium px-5 py-2 rounded-full bg-[#000000] text-white hover:bg-[#222222] transition-colors tracking-normal shadow-none"
+            >
+              {t('nav.resume')}
+            </a>
+          )}
         </div>
       </div>
     </header>

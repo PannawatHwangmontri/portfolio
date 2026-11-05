@@ -21,6 +21,7 @@ import {
   Certificate,
 } from '@/services/certificateService';
 import { getContactMessages, deleteContactMessage, ContactMessage } from '@/services/contactService';
+import { getResumes, uploadResume, activateResume, deleteResume, Resume } from '@/services/resumeService';
 import {
   getSiteContent,
   updateHeroContent,
@@ -57,6 +58,7 @@ import {
   PhoneCall,
   Save,
   LayoutTemplate,
+  FileText,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -65,6 +67,7 @@ type Tab =
   | 'github'
   | 'experience'
   | 'certificates'
+  | 'resume'
   | 'messages'
   | 'hero'
   | 'about'
@@ -112,6 +115,8 @@ export default function AdminDashboardPage() {
   const [experiences, setExperiences] = useState<ExperienceItem[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [resumes, setResumes] = useState<Resume[]>([]);
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
 
   // Simple Add Modals
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -179,14 +184,16 @@ export default function AdminDashboardPage() {
 
     const fetchData = async () => {
       try {
-        const [p, exp, cert, msg, gh, sc] = await Promise.all([
+        const [p, exp, cert, msg, gh, sc, rs] = await Promise.all([
           getProjects(),
           getExperiences(),
           getCertificates(),
           getContactMessages().catch(() => []),
           getAdminGithubRepos().catch(() => []),
           getSiteContent().catch(() => null),
+          getResumes().catch(() => []),
         ]);
+        setResumes(rs);
         setProjects(p);
         setExperiences(exp);
         setCertificates(cert);
@@ -208,6 +215,47 @@ export default function AdminDashboardPage() {
   const notify = (msg: string) => {
     setStatusMsg(msg);
     setTimeout(() => setStatusMsg(''), 3000);
+  };
+
+  const handleUploadResume = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.type !== 'application/pdf' || file.size > 5 * 1024 * 1024) {
+      notify('ต้องเป็นไฟล์ PDF ขนาดไม่เกิน 5MB');
+      return;
+    }
+    setIsUploadingResume(true);
+    try {
+      await uploadResume(file);
+      setResumes(await getResumes());
+      notify('อัปโหลดเรซูเม่และตั้งเป็นฉบับปัจจุบันแล้ว');
+    } catch (err: unknown) {
+      notify(`อัปโหลดไม่สำเร็จ: ${err instanceof Error ? err.message : 'unknown error'}`);
+    } finally {
+      setIsUploadingResume(false);
+    }
+  };
+
+  const handleActivateResume = async (id: string) => {
+    try {
+      await activateResume(id);
+      setResumes(await getResumes());
+      notify('เปลี่ยนเรซูเม่ปัจจุบันแล้ว');
+    } catch (err: unknown) {
+      notify(`ไม่สำเร็จ: ${err instanceof Error ? err.message : 'unknown error'}`);
+    }
+  };
+
+  const handleDeleteResume = async (id: string) => {
+    if (!confirm('ต้องการลบไฟล์เรซูเม่นี้ใช่หรือไม่?')) return;
+    try {
+      await deleteResume(id);
+      setResumes((prev) => prev.filter((r) => r.id !== id));
+      notify('ลบเรซูเม่แล้ว');
+    } catch (err: unknown) {
+      notify(`ลบไม่สำเร็จ: ${err instanceof Error ? err.message : 'unknown error'}`);
+    }
   };
 
   const handleSaveHero = async (e: React.FormEvent) => {
@@ -709,6 +757,18 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
+            onClick={() => setActiveTab('resume')}
+            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+              activeTab === 'resume'
+                ? 'bg-surface border-t-2 border-t-accent text-accent font-bold border-x border-border-subtle'
+                : 'text-muted hover:text-foreground'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            <span>เรซูเม่ (Resume)</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('messages')}
             className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               activeTab === 'messages'
@@ -1035,6 +1095,62 @@ export default function AdminDashboardPage() {
                       onClick={() => handleDeleteCertificate(c.id)}
                       className="p-1.5 rounded text-rose-500 hover:bg-rose-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-accent"
                       title="ลบใบรับรอง"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Resume */}
+        {activeTab === 'resume' && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-foreground">เรซูเม่ (PDF ไม่เกิน 5MB)</h2>
+              <label className="inline-flex items-center gap-1.5 text-xs font-medium px-4 py-2 rounded-full bg-accent text-white cursor-pointer">
+                <Upload className="w-4 h-4" />
+                <span>{isUploadingResume ? 'กำลังอัปโหลด...' : 'อัปโหลดเรซูเม่ใหม่'}</span>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  disabled={isUploadingResume}
+                  onChange={handleUploadResume}
+                />
+              </label>
+            </div>
+            <div className="space-y-3">
+              {resumes.length === 0 && <p className="text-sm text-muted">ยังไม่มีเรซูเม่</p>}
+              {resumes.map((r) => (
+                <div key={r.id} className="p-4 rounded-xl border border-border-subtle bg-surface flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <span className="font-bold text-foreground truncate block">{r.filename}</span>
+                    <p className="text-xs text-muted mt-0.5">{new Date(r.createdAt).toLocaleString('th-TH')}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {r.isActive ? (
+                      <Badge>ใช้งานอยู่</Badge>
+                    ) : (
+                      <Button size="sm" variant="secondary" onClick={() => handleActivateResume(r.id)} className="text-xs">
+                        ใช้ฉบับนี้
+                      </Button>
+                    )}
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 rounded text-muted hover:text-accent hover:bg-surface-subtle transition-colors"
+                      title="เปิดไฟล์"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                    <button
+                      onClick={() => handleDeleteResume(r.id)}
+                      className="p-1.5 rounded text-rose-500 hover:bg-rose-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-accent"
+                      title="ลบเรซูเม่"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

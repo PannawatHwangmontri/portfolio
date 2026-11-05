@@ -8,6 +8,7 @@ import { ContactModule } from './modules/contact/contact.module.js';
 import { ExperienceModule } from './modules/experience/experience.module.js';
 import { ProfileModule } from './modules/profile/profile.module.js';
 import { ProjectsModule } from './modules/projects/projects.module.js';
+import { ResumesModule } from './modules/resumes/resumes.module.js';
 import { SupabaseModule } from './supabase/supabase.module.js';
 
 @Module({
@@ -23,6 +24,7 @@ import { SupabaseModule } from './supabase/supabase.module.js';
     CertificatesModule,
     ContactModule,
     ProfileModule,
+    ResumesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
