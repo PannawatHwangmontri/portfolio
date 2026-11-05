@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -23,6 +24,18 @@ export class AuthGuard implements CanActivate {
 
     if (!user) {
       throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    // Google sign-up is open in Supabase: restrict to allowlist, else only the legacy email/password admin.
+    const allowed = (process.env.ADMIN_EMAILS ?? '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const isAdmin = allowed.length
+      ? allowed.includes(user.email?.toLowerCase() ?? '')
+      : user.app_metadata?.provider === 'email';
+    if (!isAdmin) {
+      throw new ForbiddenException('Not an admin account');
     }
 
     request.user = user;

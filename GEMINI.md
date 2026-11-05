@@ -20,6 +20,17 @@
 - **การ Deploy**: Railway (แยก Service สำหรับ Frontend และ Backend)
 - **บันทึกการทำงาน**: จัดเก็บประวัติลงในโฟลเดอร์ `agent_logs/` และดัชนีใน `AGENT_LOG.md`
 
+### Environment Variables (แยกไฟล์ตามส่วน ไม่ใช้ `.env` ที่ root)
+- `frontend/.env.local` (ตัวอย่าง: `frontend/.env.example`): `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL`
+- `backend/.env.local` (ตัวอย่าง: `backend/.env.example`): `PORT`, `FRONTEND_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAILS`
+- `NEXT_PUBLIC_*` ถูก inline ตอน start/build ต้องรีสตาร์ท dev server เมื่อแก้
+
+### Admin Login (Email/Password + Google)
+- ล็อกอินแอดมินได้ 2 ทาง: อีเมล/รหัสผ่านเดิม และปุ่ม Google ที่ `/admin/login`
+- Flow Google: Supabase `/auth/v1/authorize?provider=google` → `/admin/auth/callback` → `GET /api/auth/me`
+- `AuthGuard` ตรวจ allowlist `ADMIN_EMAILS`; ถ้าไม่ตั้ง รับเฉพาะ provider `email` เดิม
+- ต้องตั้งค่า: Google OAuth client, Supabase Google provider, Redirect URLs, `ADMIN_EMAILS` (Railway), `NEXT_PUBLIC_SUPABASE_URL` (Vercel)
+
 ## 3. โครงสร้างโฟลเดอร์มาตรฐาน (Clean Directory Structure)
 ```text
 portfolio/

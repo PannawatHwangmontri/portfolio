@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Lock, Mail, ShieldAlert, ArrowLeft } from 'lucide-react';
-import { loginAdmin } from '@/services/authService';
+import { loginAdmin, startGoogleLogin } from '@/services/authService';
 import Link from 'next/link';
 
 function LoginForm() {
@@ -111,6 +111,16 @@ function LoginForm() {
               {loading ? 'Authenticating...' : 'Sign In to Dashboard'}
             </Button>
           </form>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            className="w-full mt-3"
+            onClick={startGoogleLogin}
+          >
+            Continue with Google / เข้าสู่ระบบด้วย Google
+          </Button>
 
           <div className="mt-6 pt-4 border-t border-border-subtle text-center text-xs text-muted">
             <span>Development Account: </span>

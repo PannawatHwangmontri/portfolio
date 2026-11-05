@@ -26,6 +26,17 @@
   - Backend: Railway (Service `portfolio-backend-service` บน branch `main`)
 - **การบันทึกการทำงาน**: จัดเก็บประวัติลงในโฟลเดอร์ `agent_logs/` และดัชนีใน `AGENT_LOG.md`
 
+### Environment Variables (แยกไฟล์ตามส่วน ไม่ใช้ `.env` ที่ root)
+- `frontend/.env.local` (ตัวอย่าง: `frontend/.env.example`): `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL` — Next.js อ่านเฉพาะในโฟลเดอร์ `frontend/`
+- `backend/.env.local` (ตัวอย่าง: `backend/.env.example`): `PORT`, `FRONTEND_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAILS`
+- ตัวแปร `NEXT_PUBLIC_*` ถูก inline ตอน start/build ต้องรีสตาร์ท dev server ทุกครั้งที่แก้
+
+### Admin Login (Email/Password + Google)
+- ล็อกอินแอดมินได้ 2 ทาง: ฟอร์มอีเมล/รหัสผ่านเดิม และปุ่ม Google ที่ `/admin/login`
+- Flow Google: `startGoogleLogin()` → Supabase `/auth/v1/authorize?provider=google` → `/admin/auth/callback` (อ่าน `access_token` จาก URL hash) → `GET /api/auth/me`
+- `AuthGuard` (backend) ตรวจ allowlist `ADMIN_EMAILS` (คั่นด้วย `,`); ถ้าไม่ตั้ง จะรับเฉพาะบัญชี provider `email` เดิม เพื่อกัน Google user ทั่วไปเป็นแอดมิน
+- ตั้งค่าที่ต้องมี: Google Cloud OAuth client (redirect URI `https://<project>.supabase.co/auth/v1/callback`), เปิด Google provider ใน Supabase, เพิ่ม `<site>/admin/auth/callback` ใน Supabase Redirect URLs (localhost + Vercel), ตั้ง `ADMIN_EMAILS` บน Railway และ `NEXT_PUBLIC_SUPABASE_URL` บน Vercel
+
 ## 3. คำสั่งที่ใช้บ่อยสำหรับ Claude (Common Commands)
 ```bash
 # ติดตั้ง dependencies
