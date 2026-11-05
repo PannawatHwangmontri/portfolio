@@ -13,8 +13,8 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const isExpired = searchParams?.get('expired') === '1';
 
-  const [email, setEmail] = useState('admin@pannawat.dev');
-  const [password, setPassword] = useState('admin1234');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -79,7 +79,7 @@ function LoginForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-border-subtle bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-                  placeholder="admin@pannawat.dev"
+                  placeholder="admin@example.com"
                 />
               </div>
             </div>
@@ -121,11 +121,6 @@ function LoginForm() {
           >
             Continue with Google / เข้าสู่ระบบด้วย Google
           </Button>
-
-          <div className="mt-6 pt-4 border-t border-border-subtle text-center text-xs text-muted">
-            <span>Development Account: </span>
-            <span className="font-mono text-foreground">admin@pannawat.dev / admin1234</span>
-          </div>
         </Card>
       </div>
     );
